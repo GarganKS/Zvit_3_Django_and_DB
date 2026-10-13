@@ -22,10 +22,18 @@ class Route(models.Model):
 
 
 class StopOnRoute(models.Model):
-    stop = models.ForeignKey(Stop, on_delete=models.CASCADE)
-    route = models.ForeignKey(Route, on_delete=models.CASCADE)
+    stop = models.ForeignKey(Stop, models.CASCADE)
+    route = models.ForeignKey(Route, models.CASCADE)
     route_position = models.IntegerField()
     # Прибуття і відправлення
 
     def __str__(self):
-        return f"{self.stop.name} - {self.route_position}@{self.route.name}"
+        return (
+            f"{self.stop.name} - {self.route_position}@{self.route.name}"  # Переробити
+        )
+
+
+class Trip(models.Model):
+    route = models.ForeignKey(Route, models.CASCADE)
+    status = models.CharField(max_length=45)
+    price = models.DecimalField(decimal_places=2)
