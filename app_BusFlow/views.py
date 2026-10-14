@@ -16,7 +16,7 @@ class RoutesListView(ListView):
         Prefetch(
             "stoponroute_set",
             queryset=StopOnRoute.objects.select_related("stop").order_by(
-                "route_position"
+                "stop_sequence"
             ),
         )
     )
@@ -24,7 +24,7 @@ class RoutesListView(ListView):
 
 class TripsListView(ListView):
     model = Trip
-    queryset = Trip.objects.select_related("route")
+    queryset = Trip.objects.select_related("route", "vehicle")
 
 
 class VehiclesListView(ListView):

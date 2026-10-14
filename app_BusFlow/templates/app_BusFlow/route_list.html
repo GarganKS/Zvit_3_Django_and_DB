@@ -15,7 +15,7 @@
         <tr>
             <td>{{ route.id }}</td>
             <td>{{ route.name }}</td>
-            <td>{% for stop_on_route in route.stoponroute_set.all %}{{ stop_on_route.route_position }}. {{ stop_on_route.stop.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+            <td>{% for stop_on_route in route.stoponroute_set.all %}{{ stop_on_route.stop_sequence }}. {{ stop_on_route.stop.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
         </tr>
         {% empty %}
         <tr>

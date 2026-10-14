@@ -20,7 +20,7 @@
             <td>{{ vehicle.id }}</td>
             <td>{{ vehicle.name }}</td>
             <td>{{ vehicle.plate_number }}</td>
-            <td>{{ vehicle.driver }}</td>
+            <td>{{ vehicle.driver|default:"—" }}</td>
             <td>{{ vehicle.capacity }}</td>
             <td>{{ vehicle.status }}</td>
             <td>{{ vehicle.trip|default:"—" }}</td>
