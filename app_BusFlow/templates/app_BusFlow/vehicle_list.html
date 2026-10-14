@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Транспорт — BusFlow{% endblock %}
+{% block content %}
+<h2>Транспорт</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Назва</th>
+            <th>Номер</th>
+            <th>Водій</th>
+            <th>Місткість</th>
+            <th>Статус</th>
+            <th>Рейс</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vehicle in object_list %}
+        <tr>
+            <td>{{ vehicle.id }}</td>
+            <td>{{ vehicle.name }}</td>
+            <td>{{ vehicle.plate_number }}</td>
+            <td>{{ vehicle.driver }}</td>
+            <td>{{ vehicle.capacity }}</td>
+            <td>{{ vehicle.status }}</td>
+            <td>{{ vehicle.trip|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">Транспорт ще не додано.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,9 +1,27 @@
 {% extends 'base.html' %}
+{% block title %}Маршрути - BusFlow{% endblock %}
 {% block content %}
-<h2>Routes</h2>
-<ol>
-    {% for route in object_list %}
-    <li>{{ route.name }}</li>
-    {% endfor %}
-</ol>
+<h2>Маршрути</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Назва</th>
+            <th>Зупинки</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for route in object_list %}
+        <tr>
+            <td>{{ route.id }}</td>
+            <td>{{ route.name }}</td>
+            <td>{% for stop_on_route in route.stoponroute_set.all %}{{ stop_on_route.route_position }}. {{ stop_on_route.stop.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">Маршрутів ще немає.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
