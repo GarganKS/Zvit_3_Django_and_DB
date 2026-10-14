@@ -1,9 +1,10 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 <h2>Trips</h2>
 <ol>
     {% for trip in object_list %}
-    <li>{{ trip.route.name }} — {{ trip.status }} — {{ trip.price }}{% if trip.vehicle %} — {{ trip.vehicle.plate_number }}{% endif %}</li>
+    <li>
+        {{ trip.route.name }} — {{ trip.status }} — {{ trip.price }} — {{ trip.vehicle.name }}
+    </li>
     {% empty %}
     <li>No trips yet.</li>
     {% endfor %}
