@@ -28,4 +28,8 @@ There is no lint/format/typecheck step. `app_BusFlow/tests.py` is currently empt
 - **`manage.py test` can print "System check identified no issues" and exit 0 while `check`, `runserver`, and `migrate` all abort with a `SystemCheckError`.** With zero tests the runner passes an empty database-alias set to the check framework, and `DecimalField`'s `max_digits`/`decimal_places` validation (fields.E135) only fires per database alias. Always run `manage.py check` after model changes.
 - **The working tree currently fails `check`:** uncommitted changes add a `Trip` model whose `price = models.DecimalField(decimal_places=2)` is missing `max_digits`. Until that's fixed, `runserver`/`migrate`/`makemigrations` fail — this is pre-existing, not caused by your edits. Check `git status` before assuming HEAD state; other uncommitted work is in progress (`RoutesListView` + `route_list.html` replacing `routes.html`).
 - `Trip` has no migration yet — `migrations/0001_initial.py` covers only `Stop`/`Route`/`StopOnRoute`. After fixing `price`, run `makemigrations` then `migrate`.
-- `RoutesListView` relies on default `ListView` template resolution, so it needs `app_BusFlow/templates/app_BusFlow/route_list.html` (named after the *model*, not the view).
+- `RoutesListView` relies on default `ListView` template resolution, so it needs `app_BusFlow/templates/app_BusFlow/route_list.html` (named after the _model_, not the view).
+
+## Other
+
+**Use - instead —**

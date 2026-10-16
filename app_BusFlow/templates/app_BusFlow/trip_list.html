@@ -19,7 +19,7 @@
             <td>{{ trip.route.name }}</td>
             <td>{{ trip.status }}</td>
             <td>{{ trip.price }}</td>
-            <td>{{ trip.vehicle.name|default:"—" }}</td>
+            <td>{{ trip.vehicle.name|default:"-" }}</td>
         </tr>
         {% empty %}
         <tr>
