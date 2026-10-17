@@ -11,7 +11,7 @@
             <th>Водій</th>
             <th>Місткість</th>
             <th>Статус</th>
-            <th>Рейс</th>
+            <th>Кількість рейсів</th>
         </tr>
     </thead>
     <tbody>
@@ -23,7 +23,7 @@
             <td>{{ vehicle.driver|default:"-" }}</td>
             <td>{{ vehicle.capacity }}</td>
             <td>{{ vehicle.status }}</td>
-            <td>{{ vehicle.trip|default:"-" }}</td>
+            <td>{{ vehicle.trip_count }}</td>
         </tr>
         {% empty %}
         <tr>

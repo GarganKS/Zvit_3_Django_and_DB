@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 from django.views.generic import ListView, TemplateView
 
 from app_BusFlow.models import Route, StopOnRoute, Trip, Vehicle
@@ -29,7 +29,7 @@ class TripsListView(ListView):
 
 class VehiclesListView(ListView):
     model = Vehicle
-    queryset = Vehicle.objects.select_related("trip__route")
+    queryset = Vehicle.objects.annotate(trip_count=Count("trip"))
 
 
 class OrdersView(TemplateView):

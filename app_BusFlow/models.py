@@ -43,24 +43,72 @@ class StopOnRoute(models.Model):
 
 
 class Vehicle(models.Model):
+    class Status(models.TextChoices):
+        WAITING = "Очікує", "Очікує"
+        ON_ROUTE = "На рейсі", "На рейсі"
+        RENTED = "Орендований", "Орендований"
+        REPAIR = "В ремонті", "В ремонті"
+        DECOMMISSIONED = "Списано", "Списано"
+
     name = models.CharField(max_length=45)
     driver = models.CharField(max_length=45, null=True)
-    plate_number = models.CharField(max_length=15, unique=True)
+    plate_number = models.CharField(max_length=8, unique=True)
     capacity = models.PositiveIntegerField()
-    status = models.CharField(max_length=45)
+    status = models.CharField(
+        max_length=45, choices=Status.choices, default=Status.WAITING
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    status__in=[
+                        "Очікує",
+                        "На рейсі",
+                        "Орендований",
+                        "В ремонті",
+                        "Списано",
+                    ]
+                ),
+                name="vehicle_status_valid",
+            )
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.plate_number})"
 
 
 class Trip(models.Model):
+    class Status(models.TextChoices):
+        SCHEDULED = "Заплановано", "Заплановано"
+        IN_PROGRESS = "В дорозі", "В дорозі"
+        COMPLETED = "Завершено", "Завершено"
+        CANCELLED = "Скасовано", "Скасовано"
+
     # === === === === === === #
     # Прибуття і відправлення #
     # === === === === === === #
     route = models.ForeignKey(Route, models.CASCADE)
-    status = models.CharField(max_length=45)
+    status = models.CharField(
+        max_length=45, choices=Status.choices, default=Status.SCHEDULED
+    )
     price = models.DecimalField(max_digits=8, decimal_places=2)
-    vehicle = models.OneToOneField(Vehicle, models.CASCADE, related_name="trip")
+    vehicle = models.ForeignKey(Vehicle, models.CASCADE, related_name="trip")
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    status__in=[
+                        "Заплановано",
+                        "В дорозі",
+                        "Завершено",
+                        "Скасовано",
+                    ]
+                ),
+                name="trip_status_valid",
+            )
+        ]
 
     def __str__(self):
         return f"{self.route.display_name} ({self.status}): {self.price}"
