@@ -19,17 +19,15 @@ There is no lint/format/typecheck step. `app_BusFlow/tests.py` is currently empt
 ## Layout
 
 - `project_BusFlow/` — project config. Root `urls.py` mounts `app_BusFlow.urls` at `""` plus `admin/`.
-- `app_BusFlow/` — the single app: models (`Stop`, `Route`, through-model `StopOnRoute`, `Trip`), views, admin, app templates in `app_BusFlow/templates/app_BusFlow/`.
+- `app_BusFlow/` — the single app: models (`Stop`, `Route`, through-model `StopOnRoute`, `Vehicle`, `Trip`), views, admin, app templates in `app_BusFlow/templates/app_BusFlow/`.
 - `templates/base.html` — project-level base template (from `TEMPLATES DIRS`); page templates extend it.
-- `db.sqlite3` — live dev DB, gitignored but present locally.
+- `db.sqlite3` — live dev DB, gitignored but present locally; created from migrations `0001`–`0007` and currently empty (demo data was dropped). Older copies may sit next to it as `db.sqlite3.bak-*` (also gitignored).
 
 ## Gotchas
 
 - **`manage.py test` can print "System check identified no issues" and exit 0 while `check`, `runserver`, and `migrate` all abort with a `SystemCheckError`.** With zero tests the runner passes an empty database-alias set to the check framework, and `DecimalField`'s `max_digits`/`decimal_places` validation (fields.E135) only fires per database alias. Always run `manage.py check` after model changes.
-- **The working tree currently fails `check`:** uncommitted changes add a `Trip` model whose `price = models.DecimalField(decimal_places=2)` is missing `max_digits`. Until that's fixed, `runserver`/`migrate`/`makemigrations` fail — this is pre-existing, not caused by your edits. Check `git status` before assuming HEAD state; other uncommitted work is in progress (`RoutesListView` + `route_list.html` replacing `routes.html`).
-- `Trip` has no migration yet — `migrations/0001_initial.py` covers only `Stop`/`Route`/`StopOnRoute`. After fixing `price`, run `makemigrations` then `migrate`.
 - `RoutesListView` relies on default `ListView` template resolution, so it needs `app_BusFlow/templates/app_BusFlow/route_list.html` (named after the _model_, not the view).
 
-## Other
+## Style
 
-**Use - instead —**
+Use `-` (hyphen) instead of `—` (em dash) in template text and page titles.
