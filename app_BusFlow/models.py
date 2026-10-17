@@ -38,6 +38,25 @@ class StopOnRoute(models.Model):
     route = models.ForeignKey(Route, models.CASCADE)
     stop = models.ForeignKey(Stop, models.CASCADE)
     stop_sequence = models.IntegerField()
+    arrival_time = models.TimeField(null=True, blank=True)
+    departure_time = models.TimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(arrival_time__lte=models.F("departure_time"))
+                | models.Q(arrival_time__isnull=True)
+                | models.Q(departure_time__isnull=True),
+                name="stoponroute_arrival_lte_departure",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.arrival_time and self.departure_time and self.arrival_time > self.departure_time:
+            raise ValidationError(
+                {"arrival_time": "Прибуття на зупинці не може бути пізніше відправлення."}
+            )
 
     def __str__(self):
         return f"{self.stop_sequence} ({self.stop.name}): {self.route.display_name}"
