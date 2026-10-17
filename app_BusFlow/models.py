@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 # Create your models here.
@@ -94,6 +95,8 @@ class Trip(models.Model):
     )
     price = models.DecimalField(max_digits=8, decimal_places=2)
     vehicle = models.ForeignKey(Vehicle, models.CASCADE, related_name="trip")
+    departure_time = models.DateTimeField(null=True, blank=True)
+    arrival_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -107,8 +110,21 @@ class Trip(models.Model):
                     ]
                 ),
                 name="trip_status_valid",
-            )
+            ),
+            models.CheckConstraint(
+                condition=models.Q(arrival_time__gte=models.F("departure_time"))
+                | models.Q(arrival_time__isnull=True)
+                | models.Q(departure_time__isnull=True),
+                name="trip_arrival_after_departure",
+            ),
         ]
+
+    def clean(self):
+        super().clean()
+        if self.departure_time and self.arrival_time and self.arrival_time < self.departure_time:
+            raise ValidationError(
+                {"arrival_time": "Час прибуття не може бути раніше часу відправлення."}
+            )
 
     def __str__(self):
         return f"{self.route.display_name} ({self.status}): {self.price}"

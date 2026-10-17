@@ -1,4 +1,4 @@
-from django.db.models import Count, Prefetch
+from django.db.models import Count, F, Prefetch
 from django.views.generic import ListView, TemplateView
 
 from app_BusFlow.models import Route, StopOnRoute, Trip, Vehicle
@@ -24,7 +24,10 @@ class RoutesListView(ListView):
 
 class TripsListView(ListView):
     model = Trip
-    queryset = Trip.objects.select_related("route", "vehicle")
+    # Рейси без часів відправлення показуємо в кінці списку.
+    queryset = Trip.objects.select_related("route", "vehicle").order_by(
+        F("departure_time").asc(nulls_last=True)
+    )
 
 
 class VehiclesListView(ListView):

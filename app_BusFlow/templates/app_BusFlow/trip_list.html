@@ -7,6 +7,8 @@
         <tr>
             <th>ID</th>
             <th>Маршрут</th>
+            <th>Відправлення</th>
+            <th>Прибуття</th>
             <th>Статус</th>
             <th>Ціна</th>
             <th>Транспорт</th>
@@ -17,13 +19,15 @@
         <tr>
             <td>{{ trip.id }}</td>
             <td>{{ trip.route.display_name }}</td>
+            <td>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</td>
+            <td>{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</td>
             <td>{{ trip.status }}</td>
-            <td>{{ trip.price }}</td>
+            <td>{{ trip.price }}₴</td>
             <td>{{ trip.vehicle.name|default:"-" }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5">Рейсів ще немає.</td>
+            <td colspan="7">Рейсів ще немає.</td>
         </tr>
         {% endfor %}
     </tbody>
