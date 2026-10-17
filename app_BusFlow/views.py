@@ -25,8 +25,10 @@ class RoutesListView(ListView):
 class TripsListView(ListView):
     model = Trip
     # Рейси без часів відправлення показуємо в кінці списку.
-    queryset = Trip.objects.select_related("route", "vehicle").order_by(
-        F("departure_time").asc(nulls_last=True)
+    queryset = (
+        Trip.objects.select_related("route", "vehicle")
+        .prefetch_related("route__stoponroute_set__stop")
+        .order_by(F("departure_time").asc(nulls_last=True))
     )
 
 

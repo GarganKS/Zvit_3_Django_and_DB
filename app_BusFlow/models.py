@@ -23,7 +23,8 @@ class Route(models.Model):
     @property
     def display_name(self):
         """Назва маршруту: перша зупинка - остання зупинка."""
-        links = list(self.stoponroute_set.order_by("stop_sequence"))
+        # .all() бере дані з prefetch-кешу, якщо маршрути завантажені заздалегідь.
+        links = sorted(self.stoponroute_set.all(), key=lambda link: link.stop_sequence)
         if not links:
             return f"Маршрут #{self.pk}" if self.pk else "Новий маршрут"
         first = links[0].stop.name
