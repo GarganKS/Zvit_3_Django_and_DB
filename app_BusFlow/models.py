@@ -14,14 +14,23 @@ class Stop(models.Model):
 
 
 class Route(models.Model):
-    name = models.CharField(max_length=45)
     stops = models.ManyToManyField(Stop, through="StopOnRoute")
     # === === === === === === === === === === === === #
     # Зупинки (без розділення на проміжні і головні)  #
     # === === === === === === === === === === === === #
 
+    @property
+    def display_name(self):
+        """Назва маршруту: перша зупинка - остання зупинка."""
+        links = list(self.stoponroute_set.order_by("stop_sequence"))
+        if not links:
+            return f"Маршрут #{self.pk}" if self.pk else "Новий маршрут"
+        first = links[0].stop.name
+        last = links[-1].stop.name
+        return first if first == last else f"{first} - {last}"
+
     def __str__(self):
-        return self.name
+        return self.display_name
 
 
 class StopOnRoute(models.Model):
@@ -30,7 +39,7 @@ class StopOnRoute(models.Model):
     stop_sequence = models.IntegerField()
 
     def __str__(self):
-        return f"{self.stop_sequence} ({self.stop.name}): {self.route.name}"
+        return f"{self.stop_sequence} ({self.stop.name}): {self.route.display_name}"
 
 
 class Vehicle(models.Model):
@@ -54,4 +63,4 @@ class Trip(models.Model):
     vehicle = models.OneToOneField(Vehicle, models.CASCADE, related_name="trip")
 
     def __str__(self):
-        return f"{self.route.name} ({self.status}): {self.price}"
+        return f"{self.route.display_name} ({self.status}): {self.price}"

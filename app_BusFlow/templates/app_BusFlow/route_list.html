@@ -23,7 +23,7 @@
         {% for route in object_list %}
         <tr>
             <td>{{ route.id }}</td>
-            <td>{{ route.name }}</td>
+            <td>{{ route.display_name }}</td>
             <td class="stops-cell">
                 <ol class="stops">
                     {% for stop_on_route in route.stoponroute_set.all %}

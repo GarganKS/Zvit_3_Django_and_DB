@@ -16,7 +16,7 @@
         {% for trip in object_list %}
         <tr>
             <td>{{ trip.id }}</td>
-            <td>{{ trip.route.name }}</td>
+            <td>{{ trip.route.display_name }}</td>
             <td>{{ trip.status }}</td>
             <td>{{ trip.price }}</td>
             <td>{{ trip.vehicle.name|default:"-" }}</td>
