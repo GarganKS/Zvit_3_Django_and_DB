@@ -43,7 +43,10 @@
                 <a href="{% url 'routes' %}" class="{% if request.resolver_match.url_name == 'routes' %}active{% endif %}">Маршрути</a>
                 <a href="{% url 'trips' %}" class="{% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
                 <a href="{% url 'vehicles' %}" class="{% if request.resolver_match.url_name == 'vehicles' %}active{% endif %}">Транспорт</a>
-                <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Замовлення клієнтів</a>
+                {% if user.client_profile %}
+                <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Мої замовлення</a>
+                <a href="{% url 'order_new' %}" class="{% if request.resolver_match.url_name == 'order_new' %}active{% endif %}">Замовити автобус</a>
+                {% endif %}
                 <div class="nav-right">
                     {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}" class="admin-link">Адмін-панель</a>

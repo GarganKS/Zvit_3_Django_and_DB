@@ -1,7 +1,40 @@
 {% extends 'base.html' %}
-{% block title %}Замовлення - BusFlow{% endblock %}
+{% block title %}Мої замовлення - BusFlow{% endblock %}
 {% block content %}
-<h2>Замовлення</h2>
-<p>Розділ-заглушка: модель замовлень ще не створена.</p>
-<p>Коли зʼявиться модель (наприклад, <code>Order</code>), тут буде список замовлень.</p>
+<h2>Мої замовлення</h2>
+<p><a href="{% url 'order_new' %}">Замовити автобус</a></p>
+{% if orders %}
+<table>
+    <thead>
+        <tr>
+            <th>Напрямок</th>
+            <th>Пасажирів</th>
+            <th>Час відправлення</th>
+            <th>Статус</th>
+            <th>Автобус</th>
+            <th>Ціна</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.direction }}</td>
+            <td>{{ order.passengers }}</td>
+            <td>{{ order.departure_time|date:"d.m.Y H:i" }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.vehicle|default:"-" }}</td>
+            <td>{% if order.price %}{{ order.price }} грн.{% else %}-{% endif %}</td>
+            <td>
+                {% if order.status == order.Status.NEW %}
+                <a href="{% url 'order_cancel' order.pk %}">Скасувати</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Ви ще не робили замовлень.</p>
+{% endif %}
 {% endblock %}
