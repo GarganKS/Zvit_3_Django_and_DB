@@ -1,4 +1,5 @@
-from django.urls import path
+from django.contrib.auth import views as auth_views
+from django.urls import include, path
 
 from . import views
 
@@ -10,4 +11,7 @@ urlpatterns = [
     path("trips/", views.TripsListView.as_view(), name="trips"),
     path("vehicles/", views.VehiclesListView.as_view(), name="vehicles"),
     path("orders/", views.OrdersView.as_view(), name="orders"),
+    # Реєстрація та логін (login/logout/password_change - з django.contrib.auth.urls)
+    path("accounts/register/", views.ClientRegisterView.as_view(), name="register"),
+    path("accounts/", include("django.contrib.auth.urls")),
 ]

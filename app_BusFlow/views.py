@@ -1,6 +1,9 @@
+from django.contrib import messages
 from django.db.models import Count, F, Prefetch
-from django.views.generic import ListView, TemplateView
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView, TemplateView
 
+from app_BusFlow.forms import ClientRegisterForm
 from app_BusFlow.models import Route, StopOnRoute, Trip, Vehicle
 
 # Create your views here.
@@ -8,6 +11,17 @@ from app_BusFlow.models import Route, StopOnRoute, Trip, Vehicle
 
 class HomeView(TemplateView):
     template_name = "app_BusFlow/home.html"
+
+
+class ClientRegisterView(CreateView):
+    form_class = ClientRegisterForm
+    template_name = "registration/register.html"
+    success_url = reverse_lazy("login")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Реєстрацію завершено. Увійдіть у систему.")
+        return response
 
 
 class RoutesListView(ListView):
