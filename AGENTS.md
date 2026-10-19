@@ -27,6 +27,7 @@ There is no lint/format/typecheck step. `app_BusFlow/tests.py` is still empty �
   - `templates/app_BusFlow/` — `home.html`, `route_list.html`, `trip_list.html`, `vehicle_list.html`, `order_list.html`.
 - `templates/base.html` — project-level base template (from `TEMPLATES DIRS`): nav bar with active-tab highlighting via `request.resolver_match.url_name`, all CSS inlined in a `<style>` block (no static files, no `static/` dir).
 - `db.sqlite3` — live dev DB, gitignored but present locally; migrated through `0001`–`0007` and **populated with hand-added demo data — don't assume it's empty**. Older copies may sit next to it as `db.sqlite3.bak-*` (also gitignored).
+- **All data currently in the DB is test/demo data only** (seeded stops, routes, vehicles, trips). It is fabricated for development and reporting purposes and carries no real-world or practical value — safe to wipe, re-seed or overwrite at any time.
 
 ## Data model notes
 
