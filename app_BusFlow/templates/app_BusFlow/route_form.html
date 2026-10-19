@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Зупинки маршруту - BusFlow{% endblock %}
+{% block content %}
+<style>form { max-width: none; }</style>
+<h2>Маршрут: {{ route.display_name }}</h2>
+<p>Вкажіть зупинки у порядку проходження - у полі «Номер» поставте порядковий номер.</p>
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+    <ul class="errorlist">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+    <table>
+        <thead>
+            <tr>
+                <th>Зупинка</th>
+                <th>Номер</th>
+                <th>Прибуття</th>
+                <th>Відправлення</th>
+                <th>Видалити</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for field in formset %}
+            <tr>
+                <td>{{ field.stop }}{{ field.stop.errors }}</td>
+                <td>{{ field.stop_sequence }}{{ field.stop_sequence.errors }}</td>
+                <td>{{ field.arrival_time }}{{ field.arrival_time.errors }}</td>
+                <td>{{ field.departure_time }}{{ field.departure_time.errors }}</td>
+                <td>{% if field.instance.pk %}{{ field.DELETE }}{% endif %}{{ field.id }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit">Зберегти</button>
+</form>
+<p><a href="{% url 'routes' %}">Назад до маршрутів</a></p>
+{% endblock %}

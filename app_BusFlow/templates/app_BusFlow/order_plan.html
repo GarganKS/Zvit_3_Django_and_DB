@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Опрацювання замовлення - BusFlow{% endblock %}
+{% block content %}
+<h2>Опрацювання замовлення #{{ order.pk }}</h2>
+<p>
+    <strong>{{ order.direction }}</strong><br />
+    Клієнт: {{ order.client.username }} ({{ order.client.client_profile.organization }})<br />
+    Пасажирів: {{ order.passengers }}<br />
+    Час відправлення: {{ order.departure_time|date:"d.m.Y H:i" }}
+    {% if order.comment %}<br />Коментар: {{ order.comment }}{% endif %}
+</p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <button type="submit">Запланувати</button>
+</form>
+<p class="muted">Оберіть лише вільний автобус (статус «Очікує») з місткістю не меншою за кількість пасажирів.</p>
+<p><a href="{% url 'orders' %}">Назад до замовлень</a></p>
+{% endblock %}

@@ -29,6 +29,7 @@
             .helptext { color: #6b7280; font-size: 0.85rem; display: block; }
             .errorlist { color: #b91c1c; margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
             .error-text { color: #b91c1c; }
+            .muted { color: #6b7280; font-size: 0.9em; }
             .messages { list-style: none; padding: 0; }
             .messages li { padding: 0.5rem 0.75rem; border-radius: 0.4rem; margin-bottom: 0.5rem; }
             .messages li.success { background: #dcfce7; color: #166534; }
@@ -40,12 +41,17 @@
         <header>
             <nav>
                 <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Головна</a>
+                {% if is_manager %}
                 <a href="{% url 'routes' %}" class="{% if request.resolver_match.url_name == 'routes' %}active{% endif %}">Маршрути</a>
+                <a href="{% url 'stops' %}" class="{% if request.resolver_match.url_name == 'stops' %}active{% endif %}">Зупинки</a>
                 <a href="{% url 'trips' %}" class="{% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
                 <a href="{% url 'vehicles' %}" class="{% if request.resolver_match.url_name == 'vehicles' %}active{% endif %}">Транспорт</a>
-                {% if user.client_profile %}
+                <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Замовлення</a>
+                {% endif %}
+                {% if is_client %}
                 <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Мої замовлення</a>
                 <a href="{% url 'order_new' %}" class="{% if request.resolver_match.url_name == 'order_new' %}active{% endif %}">Замовити автобус</a>
+                <a href="{% url 'trips' %}" class="{% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
                 {% endif %}
                 <div class="nav-right">
                     {% if user.is_staff %}

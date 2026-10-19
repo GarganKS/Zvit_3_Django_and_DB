@@ -1,9 +1,18 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group, User
+from django.forms import inlineformset_factory
 from django.utils import timezone
 
-from app_BusFlow.models import ClientProfile, Order
+from app_BusFlow.models import (
+    ClientProfile,
+    Order,
+    Route,
+    Stop,
+    StopOnRoute,
+    Trip,
+    Vehicle,
+)
 
 
 class ClientRegisterForm(UserCreationForm):
@@ -54,3 +63,72 @@ class OrderForm(forms.ModelForm):
         if departure_time <= timezone.now():
             raise forms.ValidationError("Час відправлення має бути у майбутньому.")
         return departure_time
+
+
+class StopForm(forms.ModelForm):
+    class Meta:
+        model = Stop
+        fields = ("name", "address", "latitude", "longitude")
+
+
+class TripForm(forms.ModelForm):
+    class Meta:
+        model = Trip
+        fields = ("route", "vehicle", "status", "price", "departure_time", "arrival_time")
+        widgets = {
+            "departure_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "arrival_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+        labels = {
+            "route": "Маршрут",
+            "vehicle": "Автобус",
+            "price": "Ціна, грн",
+            "departure_time": "Час відправлення",
+            "arrival_time": "Час прибуття",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["route"].label_from_instance = lambda route: route.display_name
+
+
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ("name", "driver", "plate_number", "capacity", "status")
+
+
+class OrderPlanForm(forms.ModelForm):
+    """Менеджерська форма планування: автобус, час прибуття, ціна."""
+
+    class Meta:
+        model = Order
+        fields = ("vehicle", "arrival_time", "price")
+        widgets = {
+            "arrival_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+        labels = {
+            "vehicle": "Автобус",
+            "arrival_time": "Час прибуття",
+            "price": "Ціна, грн",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Лише вільні автобуси з місткістю не меншою за кількість пасажирів.
+        vehicles = Vehicle.objects.filter(status=Vehicle.Status.WAITING)
+        if self.instance.passengers:
+            vehicles = vehicles.filter(capacity__gte=self.instance.passengers)
+        self.fields["vehicle"].queryset = vehicles
+        self.fields["vehicle"].label_from_instance = (
+            lambda vehicle: f"{vehicle} (місць: {vehicle.capacity})"
+        )
+
+
+StopOnRouteFormSet = inlineformset_factory(
+    Route,
+    StopOnRoute,
+    fields=("stop", "stop_sequence", "arrival_time", "departure_time"),
+    extra=2,
+    can_delete=True,
+)

@@ -11,12 +11,14 @@
     .stop-badge.end { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
 </style>
 <h2>Маршрути</h2>
+<p><a href="{% url 'route_new' %}">Додати маршрут</a></p>
 <table>
     <thead>
         <tr>
             <th>ID</th>
             <th>Назва</th>
             <th>Зупинки</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -36,10 +38,14 @@
                     {% empty %}-{% endfor %}
                 </ol>
             </td>
+            <td>
+                <a href="{% url 'route_edit' route.pk %}">Зупинки</a>
+                <a href="{% url 'route_delete' route.pk %}">Видалити</a>
+            </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="3">Маршрутів ще немає.</td>
+            <td colspan="4">Маршрутів ще немає.</td>
         </tr>
         {% endfor %}
     </tbody>

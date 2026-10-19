@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Підтвердження дії - BusFlow{% endblock %}
+{% block content %}
+<h2>Підтвердження</h2>
+<p>Впевнені, що хочете {{ action }} це замовлення?</p>
+<p>
+    <strong>{{ order.direction }}</strong><br />
+    Пасажирів: {{ order.passengers }}<br />
+    Час відправлення: {{ order.departure_time|date:"d.m.Y H:i" }}<br />
+    Статус: {{ order.status }}
+    {% if order.vehicle %}<br />Автобус: {{ order.vehicle }}{% endif %}
+</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">{{ button }}</button>
+</form>
+<p><a href="{% url 'orders' %}">Ні, повернутися</a></p>
+{% endblock %}
