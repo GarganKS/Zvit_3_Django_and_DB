@@ -2,6 +2,7 @@
 {% block title %}Транспорт - BusFlow{% endblock %}
 {% block content %}
 <h2>Транспорт</h2>
+<p><a href="{% url 'vehicle_new' %}">Додати транспорт</a></p>
 <table>
     <thead>
         <tr>
@@ -12,6 +13,7 @@
             <th>Місткість</th>
             <th>Статус</th>
             <th>Кількість рейсів</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -24,10 +26,14 @@
             <td>{{ vehicle.capacity }}</td>
             <td>{{ vehicle.status }}</td>
             <td>{{ vehicle.trip_count }}</td>
+            <td>
+                <a href="{% url 'vehicle_edit' vehicle.pk %}">Редагувати</a>
+                <a href="{% url 'vehicle_delete' vehicle.pk %}">Видалити</a>
+            </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="7">Транспорт ще не додано.</td>
+            <td colspan="8">Транспорт ще не додано.</td>
         </tr>
         {% endfor %}
     </tbody>

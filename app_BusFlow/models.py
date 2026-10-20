@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -16,9 +17,6 @@ class Stop(models.Model):
 
 class Route(models.Model):
     stops = models.ManyToManyField(Stop, through="StopOnRoute")
-    # === === === === === === === === === === === === #
-    # Зупинки (без розділення на проміжні і головні)  #
-    # === === === === === === === === === === === === #
 
     @property
     def display_name(self):
@@ -56,9 +54,15 @@ class StopOnRoute(models.Model):
 
     def clean(self):
         super().clean()
-        if self.arrival_time and self.departure_time and self.arrival_time > self.departure_time:
+        if (
+            self.arrival_time
+            and self.departure_time
+            and self.arrival_time > self.departure_time
+        ):
             raise ValidationError(
-                {"arrival_time": "Прибуття на зупинці не може бути пізніше відправлення."}
+                {
+                    "arrival_time": "Прибуття на зупинці не може бути пізніше відправлення."
+                }
             )
 
     def __str__(self):
@@ -108,9 +112,6 @@ class Trip(models.Model):
         COMPLETED = "Завершено", "Завершено"
         CANCELLED = "Скасовано", "Скасовано"
 
-    # === === === === === === #
-    # Прибуття і відправлення #
-    # === === === === === === #
     route = models.ForeignKey(Route, models.CASCADE)
     status = models.CharField(
         max_length=45, choices=Status.choices, default=Status.SCHEDULED
@@ -143,10 +144,102 @@ class Trip(models.Model):
 
     def clean(self):
         super().clean()
-        if self.departure_time and self.arrival_time and self.arrival_time < self.departure_time:
+        if (
+            self.departure_time
+            and self.arrival_time
+            and self.arrival_time < self.departure_time
+        ):
             raise ValidationError(
                 {"arrival_time": "Час прибуття не може бути раніше часу відправлення."}
             )
 
     def __str__(self):
         return f"{self.route.display_name} ({self.status}): {self.price}"
+
+
+class ClientProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, models.CASCADE, related_name="client_profile"
+    )
+    organization = models.CharField(max_length=100)
+    contact_person = models.CharField(max_length=100)
+    phone = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.organization} ({self.user.username})"
+
+
+class Order(models.Model):
+    class Status(models.TextChoices):
+        NEW = "Нова", "Нова"
+        PLANNED = "Заплановано", "Заплановано"
+        REJECTED = "Відхилено", "Відхилено"
+        CANCELLED = "Скасовано", "Скасовано"
+        COMPLETED = "Завершено", "Завершено"
+
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL, models.CASCADE, related_name="orders"
+    )
+    direction = models.TextField()
+    passengers = models.PositiveIntegerField()
+    departure_time = models.DateTimeField()
+    status = models.CharField(max_length=45, choices=Status.choices, default=Status.NEW)
+    comment = models.TextField(blank=True)
+    vehicle = models.ForeignKey(
+        Vehicle, models.SET_NULL, null=True, blank=True, related_name="orders"
+    )
+    arrival_time = models.DateTimeField(null=True, blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        permissions = [
+            ("process_order", "Може опрацьовувати замовлення"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    status__in=[
+                        "Нова",
+                        "Заплановано",
+                        "Відхилено",
+                        "Скасовано",
+                        "Завершено",
+                    ]
+                ),
+                name="order_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(passengers__gt=0),
+                name="order_passengers_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(vehicle__isnull=True, price__isnull=True)
+                | models.Q(vehicle__isnull=False, price__isnull=False),
+                name="order_vehicle_price_together",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.passengers is not None and self.passengers <= 0:
+            raise ValidationError(
+                {"passengers": "Кількість пасажирів має бути більшою за 0."}
+            )
+        if (
+            self.departure_time
+            and self.arrival_time
+            and self.arrival_time < self.departure_time
+        ):
+            raise ValidationError(
+                {"arrival_time": "Час прибуття не може бути раніше часу відправлення."}
+            )
+        if self.vehicle and self.passengers and self.vehicle.capacity < self.passengers:
+            raise ValidationError(
+                {"vehicle": "Місткість автобуса менша за кількість пасажирів."}
+            )
+
+    def __str__(self):
+        return f"#{self.pk} {self.direction} ({self.status})"

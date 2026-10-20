@@ -1,7 +1,76 @@
 {% extends 'base.html' %}
-{% block title %}Замовлення - BusFlow{% endblock %}
+{% block title %}{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %} - BusFlow{% endblock %}
 {% block content %}
-<h2>Замовлення</h2>
-<p>Розділ-заглушка: модель замовлень ще не створена.</p>
-<p>Коли зʼявиться модель (наприклад, <code>Order</code>), тут буде список замовлень.</p>
+<style>
+    .status-filter { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .status-filter a { border: 1px solid #d1d5db; padding: 0.25rem 0.6rem; border-radius: 999px; color: #374151; text-decoration: none; }
+    .status-filter a.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+    td.actions { white-space: nowrap; }
+    td.actions a { margin-right: 0.5rem; }
+</style>
+<h2>{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %}</h2>
+{% if is_manager %}
+<div class="status-filter">
+    <a href="{% url 'orders' %}" {% if not current_status %}class="active"{% endif %}>Усі</a>
+    {% for value, label in statuses %}
+    <a href="?status={{ value|urlencode }}" {% if current_status == value %}class="active"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</div>
+{% else %}
+<p><a href="{% url 'order_new' %}">Замовити автобус</a></p>
+{% endif %}
+{% if orders %}
+<table>
+    <thead>
+        <tr>
+            {% if is_manager %}<th>Клієнт</th>{% endif %}
+            <th>Напрямок</th>
+            <th>Пасажирів</th>
+            <th>Час відправлення</th>
+            <th>Статус</th>
+            <th>Автобус</th>
+            <th>Ціна</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            {% if is_manager %}
+            <td>
+                {{ order.client.username }}
+                <br /><span class="muted">{{ order.client.client_profile.organization }}</span>
+            </td>
+            {% endif %}
+            <td>
+                {{ order.direction }}
+                {% if order.comment %}<br /><span class="muted">{{ order.comment }}</span>{% endif %}
+            </td>
+            <td>{{ order.passengers }}</td>
+            <td>{{ order.departure_time|date:"d.m.Y H:i" }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.vehicle|default:"-" }}</td>
+            <td>{% if order.price %}{{ order.price }} грн.{% else %}-{% endif %}</td>
+            <td class="actions">
+                {% if is_manager %}
+                    {% if order.status == order.Status.NEW %}
+                    <a href="{% url 'order_plan' order.pk %}">Опрацювати</a>
+                    <a href="{% url 'order_reject' order.pk %}">Відхилити</a>
+                    {% elif order.status == order.Status.PLANNED %}
+                    <a href="{% url 'order_complete' order.pk %}">Завершити</a>
+                    <a href="{% url 'order_cancel' order.pk %}">Скасувати</a>
+                    {% endif %}
+                {% elif order.status == order.Status.NEW %}
+                <a href="{% url 'order_cancel' order.pk %}">Скасувати</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% elif is_manager %}
+<p>Замовлень за обраним статусом немає.</p>
+{% else %}
+<p>Ви ще не робили замовлень.</p>
+{% endif %}
 {% endblock %}
