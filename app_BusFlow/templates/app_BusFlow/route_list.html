@@ -1,17 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Маршрути - BusFlow{% endblock %}
 {% block content %}
-<style>
-    td.stops-cell { vertical-align: top; }
-    ol.stops { margin: 0; padding-left: 1.4rem; }
-    ol.stops li { margin: 0.15rem 0; }
-    ol.stops .stop-address { color: #6b7280; font-size: 0.9em; }
-    .stop-badge { display: inline-block; font-size: 0.75em; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 999px; margin-left: 0.4rem; vertical-align: middle; }
-    .stop-badge.start { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .stop-badge.end { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
-</style>
-<h2>Маршрути</h2>
-<p><a href="{% url 'route_new' %}">Додати маршрут</a></p>
+<div class="page-head">
+    <h2>Маршрути</h2>
+    <a href="{% url 'route_new' %}" class="btn">Додати маршрут</a>
+</div>
+<div class="table-wrap">
 <table>
     <thead>
         <tr>
@@ -24,9 +18,9 @@
     <tbody>
         {% for route in object_list %}
         <tr>
-            <td>{{ route.id }}</td>
-            <td>{{ route.display_name }}</td>
-            <td class="stops-cell">
+            <td class="muted">{{ route.id }}</td>
+            <td><strong>{{ route.display_name }}</strong></td>
+            <td>
                 <ol class="stops">
                     {% for stop_on_route in route.stoponroute_set.all %}
                     <li>
@@ -38,16 +32,17 @@
                     {% empty %}-{% endfor %}
                 </ol>
             </td>
-            <td>
-                <a href="{% url 'route_edit' route.pk %}">Зупинки</a>
-                <a href="{% url 'route_delete' route.pk %}">Видалити</a>
+            <td class="actions">
+                <a href="{% url 'route_edit' route.pk %}">Змінити</a>
+                <a href="{% url 'route_delete' route.pk %}" class="danger">Видалити</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4">Маршрутів ще немає.</td>
+            <td colspan="4" class="empty">Маршрутів ще немає.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

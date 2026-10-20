@@ -2,5 +2,21 @@
 {% block title %}Головна - BusFlow{% endblock %}
 {% block content %}
 <h2>Головна</h2>
-<p>Вітаємо в BusFlow. Оберіть розділ у меню вище.</p>
+<p>Вітаємо в BusFlow. Оберіть розділ.</p>
+<div class="home-links">
+    {% if is_manager %}
+    <a href="{% url 'orders' %}" class="primary">Замовлення</a>
+    <a href="{% url 'trips' %}">Рейси</a>
+    <a href="{% url 'routes' %}">Маршрути</a>
+    <a href="{% url 'stops' %}">Зупинки</a>
+    <a href="{% url 'vehicles' %}">Транспорт</a>
+    {% elif is_client %}
+    <a href="{% url 'order_new' %}" class="primary">Замовити автобус</a>
+    <a href="{% url 'orders' %}">Мої замовлення</a>
+    <a href="{% url 'trips' %}">Рейси</a>
+    {% else %}
+    <a href="{% url 'login' %}" class="primary">Увійти</a>
+    <a href="{% url 'register' %}">Реєстрація</a>
+    {% endif %}
+</div>
 {% endblock %}

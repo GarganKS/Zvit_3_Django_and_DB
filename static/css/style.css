@@ -1,0 +1,368 @@
+/* BusFlow - мінімалістичний стиль.
+   Один акцентний колір (синій) використовується лише для головних дій
+   та поточного розділу. Решта - спокійні сірі відтінки. */
+
+:root {
+    --text: #1f2328;
+    --muted: #6a737d;
+    --line: #e1e4e8;
+    --bg: #ffffff;
+    --bg-soft: #f6f7f8;
+    --accent: #1f4e8c;
+    --accent-hover: #173d6e;
+    --danger: #b42318;
+    --danger-hover: #8f1c12;
+    --radius: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h2 { font-size: 1.5rem; font-weight: 600; margin: 0 0 1rem; }
+p { margin: 0 0 1rem; }
+
+/* ---------- Шапка та навігація ---------- */
+
+.site-header {
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+}
+
+.site-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--text);
+    padding: 0.9rem 0;
+    margin-right: 0.5rem;
+}
+.brand:hover { text-decoration: none; }
+
+.site-nav a.nav-link {
+    color: var(--muted);
+    padding: 1rem 0 0.85rem;
+    border-bottom: 3px solid transparent;
+}
+.site-nav a.nav-link:hover { color: var(--text); text-decoration: none; }
+.site-nav a.nav-link.active {
+    color: var(--text);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+}
+
+.nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.95rem;
+}
+.nav-right form { display: inline; margin: 0; max-width: none; }
+.nav-user { color: var(--muted); }
+
+/* Кнопка "Вийти" виглядає як звичайне посилання */
+.link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+    font: inherit;
+    cursor: pointer;
+}
+.link-button:hover { text-decoration: underline; }
+
+/* ---------- Основний вміст ---------- */
+
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.75rem 1rem 2rem;
+}
+
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.page-head h2 { margin: 0; }
+
+.muted { color: var(--muted); font-size: 0.9em; }
+
+footer {
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem;
+}
+
+/* ---------- Повідомлення ---------- */
+
+.messages { list-style: none; margin: 0 0 1.25rem; padding: 0; }
+.messages li {
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--line);
+    border-left-width: 4px;
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+}
+.messages li.success { border-left-color: #2e7d32; }
+.messages li.error,
+.messages li.warning { border-left-color: var(--danger); }
+.messages li.info { border-left-color: var(--accent); }
+
+/* ---------- Кнопки ---------- */
+
+.btn,
+button[type="submit"] {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font: inherit;
+    cursor: pointer;
+    text-align: center;
+}
+.btn:hover,
+button[type="submit"]:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-small { padding: 0.2rem 0.65rem; font-size: 0.9rem; }
+
+.btn-danger,
+button[type="submit"].btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+.btn-danger:hover,
+button[type="submit"].btn-danger:hover {
+    background: var(--danger-hover);
+    border-color: var(--danger-hover);
+}
+
+/* Кнопка "Вийти" в шапці - це не основна дія */
+.nav-right button[type="submit"] {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+}
+.nav-right button[type="submit"]:hover { background: none; text-decoration: underline; }
+
+/* ---------- Таблиці ---------- */
+
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+th, td {
+    padding: 0.7rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+}
+th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    border-bottom: 2px solid var(--line);
+}
+tbody tr:hover { background: var(--bg-soft); }
+
+/* Рядок, що потребує уваги (нове замовлення) */
+tr.highlight,
+tr.highlight:hover { background: #fff8e1; }
+
+td.actions { white-space: nowrap; text-align: right; }
+td.actions a { margin-left: 0.9rem; }
+td.actions a:first-child { margin-left: 0; }
+td.actions a.danger { color: var(--danger); }
+td.actions a.btn { color: #fff; }
+
+td.empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem 0.75rem;
+}
+
+/* ---------- Статуси ---------- */
+
+.badge {
+    display: inline-block;
+    padding: 0.05rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    background: #eef0f2;
+    color: #4b535b;
+}
+.badge-warn { background: #fff1c2; color: #7a5200; }
+.badge-info { background: #e3edf9; color: var(--accent); }
+.badge-good { background: #e3f3e7; color: #1a6b3a; }
+.badge-bad  { background: #fbe4e1; color: var(--danger); }
+
+/* ---------- Список зупинок маршруту ---------- */
+
+ol.stops { margin: 0; padding-left: 1.4rem; }
+ol.stops li { margin: 0.15rem 0; }
+.stop-address { color: var(--muted); font-size: 0.9em; }
+
+.stop-badge {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.stop-badge.start { background: #e3f3e7; color: #1a6b3a; }
+.stop-badge.end   { background: #e3edf9; color: var(--accent); }
+
+/* ---------- Фільтр за статусом ---------- */
+
+.status-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+}
+.status-filter a {
+    padding: 0.2rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+.status-filter a:hover { color: var(--text); text-decoration: none; border-color: #c4c9ce; }
+.status-filter a.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* ---------- Форми ---------- */
+
+form { margin: 0; }
+
+.form-narrow { max-width: 28rem; }
+
+.form-grid { display: grid; gap: 1rem; }
+.form-grid > div { display: flex; flex-direction: column; gap: 0.25rem; }
+
+label { font-weight: 600; font-size: 0.95rem; }
+
+input, textarea, select {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #c4c9ce;
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+}
+input:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: var(--accent);
+}
+input[type="checkbox"], input[type="radio"] { width: auto; }
+
+.helptext { color: var(--muted); font-size: 0.85rem; display: block; }
+
+.errorlist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    color: var(--danger);
+    font-size: 0.9rem;
+}
+.error-text { color: var(--danger); }
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+/* Таблиця всередині форми (зупинки маршруту) */
+form .table-wrap { margin-bottom: 0.5rem; }
+form td input, form td select { min-width: 7rem; }
+form td input[type="checkbox"] { min-width: 0; }
+
+/* ---------- Картка з даними замовлення ---------- */
+
+.card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    max-width: 32rem;
+}
+.card strong { font-size: 1.05rem; }
+.card dl { margin: 0.5rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 1rem; }
+.card dt { color: var(--muted); }
+.card dd { margin: 0; }
+
+/* ---------- Головна ---------- */
+
+.home-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+.home-links a {
+    display: block;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-weight: 600;
+}
+.home-links a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.home-links a.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.home-links a.primary:hover { background: var(--accent-hover); color: #fff; }
+
+/* ---------- Мобільні екрани ---------- */
+
+@media (max-width: 600px) {
+    .nav-right { margin-left: 0; width: 100%; padding-bottom: 0.6rem; }
+    .site-nav a.nav-link { padding: 0.5rem 0; }
+    td.actions { white-space: normal; }
+}
+
+/* Примітка під формою */
+.form-note { margin-top: 1rem; margin-bottom: 0; }

@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Рейси - BusFlow{% endblock %}
 {% block content %}
-<h2>Рейси</h2>
-{% if is_manager %}
-<p><a href="{% url 'trip_new' %}">Додати рейс</a></p>
-{% endif %}
+<div class="page-head">
+    <h2>Рейси</h2>
+    {% if is_manager %}<a href="{% url 'trip_new' %}" class="btn">Додати рейс</a>{% endif %}
+</div>
+<div class="table-wrap">
 <table>
     <thead>
         <tr>
@@ -21,25 +22,26 @@
     <tbody>
         {% for trip in object_list %}
         <tr>
-            <td>{{ trip.id }}</td>
-            <td>{{ trip.route.display_name }}</td>
+            <td class="muted">{{ trip.id }}</td>
+            <td><strong>{{ trip.route.display_name }}</strong></td>
             <td>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</td>
             <td>{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</td>
-            <td>{{ trip.status }}</td>
+            <td>{% include "_status.html" with status=trip.status %}</td>
             <td>{{ trip.price }}₴</td>
             <td>{{ trip.vehicle.name|default:"-" }}</td>
             {% if is_manager %}
-            <td>
+            <td class="actions">
                 <a href="{% url 'trip_edit' trip.pk %}">Редагувати</a>
-                <a href="{% url 'trip_delete' trip.pk %}">Видалити</a>
+                <a href="{% url 'trip_delete' trip.pk %}" class="danger">Видалити</a>
             </td>
             {% endif %}
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8">Рейсів ще немає.</td>
+            <td colspan="8" class="empty">Рейсів ще немає.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

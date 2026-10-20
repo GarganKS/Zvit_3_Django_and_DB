@@ -1,14 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %} - BusFlow{% endblock %}
 {% block content %}
-<style>
-    .status-filter { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
-    .status-filter a { border: 1px solid #d1d5db; padding: 0.25rem 0.6rem; border-radius: 999px; color: #374151; text-decoration: none; }
-    .status-filter a.active { background: #2563eb; border-color: #2563eb; color: #fff; }
-    td.actions { white-space: nowrap; }
-    td.actions a { margin-right: 0.5rem; }
-</style>
-<h2>{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %}</h2>
+<div class="page-head">
+    <h2>{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %}</h2>
+    {% if not is_manager %}<a href="{% url 'order_new' %}" class="btn">Замовити автобус</a>{% endif %}
+</div>
 {% if is_manager %}
 <div class="status-filter">
     <a href="{% url 'orders' %}" {% if not current_status %}class="active"{% endif %}>Усі</a>
@@ -16,17 +12,16 @@
     <a href="?status={{ value|urlencode }}" {% if current_status == value %}class="active"{% endif %}>{{ label }}</a>
     {% endfor %}
 </div>
-{% else %}
-<p><a href="{% url 'order_new' %}">Замовити автобус</a></p>
 {% endif %}
 {% if orders %}
+<div class="table-wrap">
 <table>
     <thead>
         <tr>
             {% if is_manager %}<th>Клієнт</th>{% endif %}
             <th>Напрямок</th>
             <th>Пасажирів</th>
-            <th>Час відправлення</th>
+            <th>Відправлення</th>
             <th>Статус</th>
             <th>Автобус</th>
             <th>Ціна</th>
@@ -35,7 +30,7 @@
     </thead>
     <tbody>
         {% for order in orders %}
-        <tr>
+        <tr{% if is_manager and order.status == order.Status.NEW %} class="highlight"{% endif %}>
             {% if is_manager %}
             <td>
                 {{ order.client.username }}
@@ -48,29 +43,30 @@
             </td>
             <td>{{ order.passengers }}</td>
             <td>{{ order.departure_time|date:"d.m.Y H:i" }}</td>
-            <td>{{ order.status }}</td>
+            <td>{% include "_status.html" with status=order.status %}</td>
             <td>{{ order.vehicle|default:"-" }}</td>
             <td>{% if order.price %}{{ order.price }} грн.{% else %}-{% endif %}</td>
             <td class="actions">
                 {% if is_manager %}
                     {% if order.status == order.Status.NEW %}
-                    <a href="{% url 'order_plan' order.pk %}">Опрацювати</a>
-                    <a href="{% url 'order_reject' order.pk %}">Відхилити</a>
+                    <a href="{% url 'order_plan' order.pk %}" class="btn btn-small">Опрацювати</a>
+                    <a href="{% url 'order_reject' order.pk %}" class="danger">Відхилити</a>
                     {% elif order.status == order.Status.PLANNED %}
                     <a href="{% url 'order_complete' order.pk %}">Завершити</a>
-                    <a href="{% url 'order_cancel' order.pk %}">Скасувати</a>
+                    <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
                     {% endif %}
                 {% elif order.status == order.Status.NEW %}
-                <a href="{% url 'order_cancel' order.pk %}">Скасувати</a>
+                <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% elif is_manager %}
-<p>Замовлень за обраним статусом немає.</p>
+<p class="muted">Замовлень за обраним статусом немає.</p>
 {% else %}
-<p>Ви ще не робили замовлень.</p>
+<p class="muted">Ви ще не робили замовлень.</p>
 {% endif %}
 {% endblock %}

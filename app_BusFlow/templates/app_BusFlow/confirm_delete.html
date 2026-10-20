@@ -5,7 +5,9 @@
 <p>Впевнені, що хочете видалити «{{ object }}»? Цю дію не можна скасувати.</p>
 <form method="post">
     {% csrf_token %}
-    <button type="submit">Так, видалити</button>
+    <div class="form-actions">
+        <button type="submit" class="btn-danger">Так, видалити</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Ні, повернутися</a>
+    </div>
 </form>
-<p><a href="{{ request.META.HTTP_REFERER|default:'/' }}">Ні, повернутися</a></p>
 {% endblock %}

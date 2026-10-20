@@ -3,14 +3,18 @@
 {% block content %}
 <h2>Скасування замовлення</h2>
 <p>Впевнені, що хочете скасувати замовлення?</p>
-<p>
-    <strong>{{ order.direction }}</strong><br />
-    Пасажирів: {{ order.passengers }}<br />
-    Час відправлення: {{ order.departure_time|date:"d.m.Y H:i" }}
-</p>
+<div class="card">
+    <strong>{{ order.direction }}</strong>
+    <dl>
+        <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
+        <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
+    </dl>
+</div>
 <form method="post">
     {% csrf_token %}
-    <button type="submit">Так, скасувати</button>
+    <div class="form-actions">
+        <button type="submit" class="btn-danger">Так, скасувати</button>
+        <a href="{% url 'orders' %}">Ні, повернутися</a>
+    </div>
 </form>
-<p><a href="{% url 'orders' %}">Ні, повернутися</a></p>
 {% endblock %}

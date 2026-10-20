@@ -1,0 +1,2 @@
+{# Кольоровий статус. Використання: {% include "_status.html" with status=obj.status %} #}
+<span class="badge {% if status == 'Нова' %}badge-warn{% elif status == 'Заплановано' or status == 'В дорозі' or status == 'На рейсі' %}badge-info{% elif status == 'Завершено' or status == 'Очікує' %}badge-good{% elif status == 'Відхилено' or status == 'Скасовано' or status == 'В ремонті' %}badge-bad{% endif %}">{{ status }}</span>

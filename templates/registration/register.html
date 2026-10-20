@@ -1,12 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}Реєстрація - BusFlow{% endblock %}
 {% block content %}
-<h2>Реєстрація клієнта</h2>
-<p>Створіть акаунт, щоб замовляти автобус для поїздок.</p>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button type="submit">Зареєструватися</button>
-</form>
-<p>Вже маєте акаунт? <a href="{% url 'login' %}">Увійти</a></p>
+<div class="form-narrow">
+    <h2>Реєстрація клієнта</h2>
+    <p class="muted">Створіть акаунт, щоб замовляти автобус для поїздок.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">{{ form.as_div }}</div>
+        <div class="form-actions">
+            <button type="submit">Зареєструватися</button>
+        </div>
+    </form>
+    <p class="muted form-note">Вже маєте акаунт? <a href="{% url 'login' %}">Увійти</a></p>
+</div>
 {% endblock %}

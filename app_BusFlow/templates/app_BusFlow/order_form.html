@@ -1,11 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}Замовити автобус - BusFlow{% endblock %}
 {% block content %}
-<h2>Замовити автобус</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button type="submit">Надіслати замовлення</button>
-</form>
-<p><a href="{% url 'orders' %}">Назад до моїх замовлень</a></p>
+<div class="form-narrow">
+    <h2>Замовити автобус</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">{{ form.as_div }}</div>
+        <div class="form-actions">
+            <button type="submit">Надіслати замовлення</button>
+            <a href="{% url 'orders' %}">Назад до моїх замовлень</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

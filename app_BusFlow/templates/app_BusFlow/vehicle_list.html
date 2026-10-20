@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Транспорт - BusFlow{% endblock %}
 {% block content %}
-<h2>Транспорт</h2>
-<p><a href="{% url 'vehicle_new' %}">Додати транспорт</a></p>
+<div class="page-head">
+    <h2>Транспорт</h2>
+    <a href="{% url 'vehicle_new' %}" class="btn">Додати транспорт</a>
+</div>
+<div class="table-wrap">
 <table>
     <thead>
         <tr>
@@ -19,23 +22,24 @@
     <tbody>
         {% for vehicle in object_list %}
         <tr>
-            <td>{{ vehicle.id }}</td>
-            <td>{{ vehicle.name }}</td>
+            <td class="muted">{{ vehicle.id }}</td>
+            <td><strong>{{ vehicle.name }}</strong></td>
             <td>{{ vehicle.plate_number }}</td>
             <td>{{ vehicle.driver|default:"-" }}</td>
             <td>{{ vehicle.capacity }}</td>
-            <td>{{ vehicle.status }}</td>
+            <td>{% include "_status.html" with status=vehicle.status %}</td>
             <td>{{ vehicle.trip_count }}</td>
-            <td>
+            <td class="actions">
                 <a href="{% url 'vehicle_edit' vehicle.pk %}">Редагувати</a>
-                <a href="{% url 'vehicle_delete' vehicle.pk %}">Видалити</a>
+                <a href="{% url 'vehicle_delete' vehicle.pk %}" class="danger">Видалити</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8">Транспорт ще не додано.</td>
+            <td colspan="8" class="empty">Транспорт ще не додано.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

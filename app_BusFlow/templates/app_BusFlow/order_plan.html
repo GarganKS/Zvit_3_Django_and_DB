@@ -2,18 +2,24 @@
 {% block title %}Опрацювання замовлення - BusFlow{% endblock %}
 {% block content %}
 <h2>Опрацювання замовлення #{{ order.pk }}</h2>
-<p>
-    <strong>{{ order.direction }}</strong><br />
-    Клієнт: {{ order.client.username }} ({{ order.client.client_profile.organization }})<br />
-    Пасажирів: {{ order.passengers }}<br />
-    Час відправлення: {{ order.departure_time|date:"d.m.Y H:i" }}
-    {% if order.comment %}<br />Коментар: {{ order.comment }}{% endif %}
-</p>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button type="submit">Запланувати</button>
-</form>
-<p class="muted">Оберіть лише вільний автобус (статус «Очікує») з місткістю не меншою за кількість пасажирів.</p>
-<p><a href="{% url 'orders' %}">Назад до замовлень</a></p>
+<div class="card">
+    <strong>{{ order.direction }}</strong>
+    <dl>
+        <dt>Клієнт</dt><dd>{{ order.client.username }} ({{ order.client.client_profile.organization }})</dd>
+        <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
+        <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
+        {% if order.comment %}<dt>Коментар</dt><dd>{{ order.comment }}</dd>{% endif %}
+    </dl>
+</div>
+<div class="form-narrow">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">{{ form.as_div }}</div>
+        <p class="muted form-note">Оберіть лише вільний автобус (статус «Очікує») з місткістю не меншою за кількість пасажирів.</p>
+        <div class="form-actions">
+            <button type="submit">Запланувати</button>
+            <a href="{% url 'orders' %}">Назад до замовлень</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

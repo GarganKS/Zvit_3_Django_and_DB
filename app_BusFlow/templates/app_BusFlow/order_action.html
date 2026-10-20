@@ -3,16 +3,20 @@
 {% block content %}
 <h2>Підтвердження</h2>
 <p>Впевнені, що хочете {{ action }} це замовлення?</p>
-<p>
-    <strong>{{ order.direction }}</strong><br />
-    Пасажирів: {{ order.passengers }}<br />
-    Час відправлення: {{ order.departure_time|date:"d.m.Y H:i" }}<br />
-    Статус: {{ order.status }}
-    {% if order.vehicle %}<br />Автобус: {{ order.vehicle }}{% endif %}
-</p>
+<div class="card">
+    <strong>{{ order.direction }}</strong>
+    <dl>
+        <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
+        <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
+        <dt>Статус</dt><dd>{% include "_status.html" with status=order.status %}</dd>
+        {% if order.vehicle %}<dt>Автобус</dt><dd>{{ order.vehicle }}</dd>{% endif %}
+    </dl>
+</div>
 <form method="post">
     {% csrf_token %}
-    <button type="submit">{{ button }}</button>
+    <div class="form-actions">
+        <button type="submit">{{ button }}</button>
+        <a href="{% url 'orders' %}">Ні, повернутися</a>
+    </div>
 </form>
-<p><a href="{% url 'orders' %}">Ні, повернутися</a></p>
 {% endblock %}
