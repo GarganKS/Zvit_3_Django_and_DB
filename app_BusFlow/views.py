@@ -2,9 +2,10 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Count, F, Prefetch
+from django.db.models import Count, F, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import (
     CreateView,
@@ -19,10 +20,11 @@ from app_BusFlow.forms import (
     OrderForm,
     OrderPlanForm,
     StopForm,
-    StopOnRouteFormSet,
     TripForm,
     VehicleForm,
+    route_formset_class,
 )
+from app_BusFlow.context_processors import roles
 from app_BusFlow.mixins import ClientRequiredMixin, ManagerRequiredMixin, TitleMixin
 from app_BusFlow.models import Order, Route, Stop, StopOnRoute, Trip, Vehicle
 
@@ -30,7 +32,42 @@ from app_BusFlow.models import Order, Route, Stop, StopOnRoute, Trip, Vehicle
 
 
 class HomeView(TemplateView):
+    """Дашборд: менеджеру - показники й найближчі справи, клієнту - його замовлення."""
+
     template_name = "app_BusFlow/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        role = roles(self.request)
+        if role["is_manager"]:
+            now = timezone.now()
+            new_orders = Order.objects.filter(status=Order.Status.NEW)
+            context["new_orders_count"] = new_orders.count()
+            context["new_orders"] = new_orders.select_related(
+                "client__client_profile"
+            ).order_by("departure_time")[:5]
+            context["trips_today_count"] = (
+                Trip.objects.filter(departure_time__date=timezone.localdate())
+                .exclude(status=Trip.Status.CANCELLED)
+                .count()
+            )
+            context["free_vehicles_count"] = Vehicle.objects.filter(
+                status=Vehicle.Status.WAITING
+            ).count()
+            context["upcoming_trips"] = (
+                Trip.objects.filter(
+                    status=Trip.Status.SCHEDULED, departure_time__gte=now
+                )
+                .select_related("route", "vehicle")
+                .prefetch_related("route__stoponroute_set__stop")
+                .order_by("departure_time")[:5]
+            )
+        elif role["is_client"]:
+            context["my_orders"] = Order.objects.filter(client=user).select_related(
+                "vehicle"
+            )[:5]
+        return context
 
 
 class ClientRegisterView(CreateView):
@@ -59,31 +96,45 @@ class RoutesListView(ManagerRequiredMixin, ListView):
     )
 
 
-class RouteCreateView(ManagerRequiredMixin, View):
-    """Створення маршруту: спочатку порожній Route, далі - сторінка зупинок."""
-
-    def get(self, request):
-        route = Route.objects.create()
-        return redirect("route_edit", pk=route.pk)
-
-
 class RouteUpdateView(ManagerRequiredMixin, View):
+    """Одна сторінка для створення й редагування маршруту (список зупинок)."""
+
     template_name = "app_BusFlow/route_form.html"
+    new_rows = 0  # скільки порожніх рядків зупинок показати
 
-    def get(self, request, pk):
-        route = get_object_or_404(Route, pk=pk)
-        context = {"route": route, "formset": StopOnRouteFormSet(instance=route)}
+    def get_route(self, pk):
+        return get_object_or_404(Route, pk=pk) if pk else Route()
+
+    def build_formset(self, route, data=None):
+        formset_class = route_formset_class(extra=2 if not route.pk else self.new_rows)
+        queryset = StopOnRoute.objects.order_by("stop_sequence")
+        return formset_class(data, instance=route, queryset=queryset)
+
+    def render_form(self, request, route, formset):
+        context = {"route": route, "formset": formset, "is_new": not route.pk}
         return render(request, self.template_name, context)
 
-    def post(self, request, pk):
-        route = get_object_or_404(Route, pk=pk)
-        formset = StopOnRouteFormSet(request.POST, instance=route)
-        if formset.is_valid():
+    def get(self, request, pk=None):
+        route = self.get_route(pk)
+        return self.render_form(request, route, self.build_formset(route))
+
+    def post(self, request, pk=None):
+        route = self.get_route(pk)
+        is_new = not route.pk
+        formset = self.build_formset(route, request.POST)
+        if not formset.is_valid():
+            return self.render_form(request, route, formset)
+        with transaction.atomic():
+            route.save()
             formset.save()
-            messages.success(request, "Зупинки маршруту збережено.")
-            return redirect("routes")
-        context = {"route": route, "formset": formset}
-        return render(request, self.template_name, context)
+        messages.success(
+            request, "Маршрут створено." if is_new else "Маршрут збережено."
+        )
+        return redirect("routes")
+
+
+class RouteCreateView(RouteUpdateView):
+    """Той самий екран, але маршрут у базі з'являється лише після збереження."""
 
 
 class RouteDeleteView(ManagerRequiredMixin, TitleMixin, DeleteView):
@@ -93,14 +144,65 @@ class RouteDeleteView(ManagerRequiredMixin, TitleMixin, DeleteView):
     success_url = reverse_lazy("routes")
 
 
+def matching_ids(model, text, *fields):
+    """Первинні ключі записів, де будь-яке з полів містить text без урахування регістру.
+
+    SQLite порівнює регістр лише для латиниці, тому icontains не знайде «київ»
+    серед «Київ». Таблиці невеликі, тож порівнюємо в Python.
+    """
+    needle = text.casefold()
+    return [
+        row["pk"]
+        for row in model.objects.values("pk", *fields)
+        if any(needle in (row[field] or "").casefold() for field in fields)
+    ]
+
+
 class TripsListView(LoginRequiredMixin, ListView):
     model = Trip
-    # Рейси без часів відправлення показуємо в кінці списку.
-    queryset = (
-        Trip.objects.select_related("route", "vehicle")
-        .prefetch_related("route__stoponroute_set__stop")
-        .order_by(F("departure_time").asc(nulls_last=True))
-    )
+    periods = (("today", "Сьогодні"), ("upcoming", "Майбутні"), ("past", "Минулі"))
+
+    def get_queryset(self):
+        params = self.request.GET
+        # Рейси без часів відправлення показуємо в кінці списку.
+        queryset = (
+            Trip.objects.select_related("route", "vehicle")
+            .prefetch_related("route__stoponroute_set__stop")
+            .order_by(F("departure_time").asc(nulls_last=True))
+        )
+        text = params.get("q", "").strip()
+        if text:
+            stop_ids = matching_ids(Stop, text, "name")
+            vehicle_fields = ("name", "plate_number") if roles(self.request)["is_manager"] else ("name",)
+            vehicle_ids = matching_ids(Vehicle, text, *vehicle_fields)
+            queryset = queryset.filter(
+                Q(route__in=Route.objects.filter(stops__in=stop_ids).values("pk"))
+                | Q(vehicle__in=vehicle_ids)
+            )
+        if params.get("status") in Trip.Status.values:
+            queryset = queryset.filter(status=params["status"])
+        period = params.get("period")
+        now = timezone.now()
+        if period == "today":
+            queryset = queryset.filter(departure_time__date=timezone.localdate())
+        elif period == "upcoming":
+            queryset = queryset.filter(departure_time__gte=now)
+        elif period == "past":
+            queryset = queryset.filter(departure_time__lt=now)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        params = self.request.GET
+        context["statuses"] = Trip.Status.choices
+        context["periods"] = self.periods
+        context["q"] = params.get("q", "").strip()
+        context["current_status"] = params.get("status", "")
+        context["current_period"] = params.get("period", "")
+        context["filtered"] = bool(
+            context["q"] or context["current_status"] or context["current_period"]
+        )
+        return context
 
 
 class TripCreateView(ManagerRequiredMixin, TitleMixin, CreateView):
@@ -154,7 +256,26 @@ class StopDeleteView(ManagerRequiredMixin, TitleMixin, DeleteView):
 
 class VehiclesListView(ManagerRequiredMixin, ListView):
     model = Vehicle
-    queryset = Vehicle.objects.annotate(trip_count=Count("trip"))
+
+    def get_queryset(self):
+        params = self.request.GET
+        queryset = Vehicle.objects.annotate(trip_count=Count("trip"))
+        text = params.get("q", "").strip()
+        if text:
+            ids = matching_ids(Vehicle, text, "name", "plate_number", "driver")
+            queryset = queryset.filter(pk__in=ids)
+        if params.get("status") in Vehicle.Status.values:
+            queryset = queryset.filter(status=params["status"])
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        params = self.request.GET
+        context["statuses"] = Vehicle.Status.choices
+        context["q"] = params.get("q", "").strip()
+        context["current_status"] = params.get("status", "")
+        context["filtered"] = bool(context["q"] or context["current_status"])
+        return context
 
 
 class VehicleCreateView(ManagerRequiredMixin, TitleMixin, CreateView):

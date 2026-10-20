@@ -5,6 +5,23 @@
     <h2>Рейси</h2>
     {% if is_manager %}<a href="{% url 'trip_new' %}" class="btn">Додати рейс</a>{% endif %}
 </div>
+<form method="get" class="filters">
+    <input type="search" name="q" value="{{ q }}" placeholder="Пошук: зупинка або автобус" aria-label="Пошук" />
+    <select name="status" aria-label="Статус">
+        <option value="">Усі статуси</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="period" aria-label="Період">
+        <option value="">Будь-який час</option>
+        {% for value, label in periods %}
+        <option value="{{ value }}" {% if current_period == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Знайти</button>
+    {% if filtered %}<a href="{% url 'trips' %}">Скинути</a>{% endif %}
+</form>
 <div class="table-wrap">
 <table>
     <thead>
@@ -38,7 +55,10 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8" class="empty">Рейсів ще немає.</td>
+            <td colspan="8" class="empty">
+                {% if filtered %}За вашим запитом рейсів не знайдено. <a href="{% url 'trips' %}">Скинути фільтри</a>
+                {% else %}Рейсів ще немає.{% if is_manager %} <a href="{% url 'trip_new' %}">Додати перший рейс</a>{% endif %}{% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

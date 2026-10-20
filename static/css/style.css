@@ -217,20 +217,30 @@ td.empty {
 }
 
 /* ---------- Статуси ---------- */
+/* Кожен статус має власний колір. Відповідність статус -> клас
+   задана в app_BusFlow/templatetags/busflow_extras.py */
 
 .badge {
     display: inline-block;
-    padding: 0.05rem 0.55rem;
+    padding: 0.05rem 0.6rem;
     border-radius: 999px;
     font-size: 0.85rem;
+    font-weight: 500;
     white-space: nowrap;
     background: #eef0f2;
     color: #4b535b;
 }
-.badge-warn { background: #fff1c2; color: #7a5200; }
-.badge-info { background: #e3edf9; color: var(--accent); }
-.badge-good { background: #e3f3e7; color: #1a6b3a; }
-.badge-bad  { background: #fbe4e1; color: var(--danger); }
+.badge-new       { background: #ffe9a8; color: #6b4a00; }  /* Нова */
+.badge-planned   { background: #dbe9fb; color: #1f4e8c; }  /* Заплановано */
+.badge-progress  { background: #d0f0ee; color: #0b6560; }  /* В дорозі */
+.badge-done      { background: #d6efdc; color: #17622f; }  /* Завершено */
+.badge-cancelled { background: #e4e7ea; color: #4b535b; }  /* Скасовано */
+.badge-rejected  { background: #fbdcd8; color: #b42318; }  /* Відхилено */
+.badge-free      { background: #e5f4bf; color: #476400; }  /* Очікує (вільний автобус) */
+.badge-onroute   { background: #e6dcfa; color: #5a32a3; }  /* На рейсі */
+.badge-rented    { background: #fde0c4; color: #9a4a00; }  /* Орендований */
+.badge-repair    { background: #fbdbeb; color: #9d1d63; }  /* В ремонті */
+.badge-retired   { background: #3b4148; color: #ffffff; }  /* Списано */
 
 /* ---------- Список зупинок маршруту ---------- */
 
@@ -366,3 +376,119 @@ form td input[type="checkbox"] { min-width: 0; }
 
 /* Примітка під формою */
 .form-note { margin-top: 1rem; margin-bottom: 0; }
+
+/* ---------- Кнопки: додаткові види ---------- */
+
+.btn-secondary,
+button.btn-secondary {
+    background: #fff;
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.btn-secondary:hover,
+button.btn-secondary:hover {
+    background: #eef3fa;
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+.icon-btn {
+    width: 2.1rem;
+    height: 2.1rem;
+    padding: 0;
+    border: 1px solid #c4c9ce;
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+.icon-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+
+.link-button.danger { color: var(--danger); }
+
+/* ---------- Дашборд ---------- */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.stat {
+    display: block;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--text);
+}
+.stat:hover { border-color: var(--accent); text-decoration: none; }
+.stat-value { display: block; font-size: 2.25rem; font-weight: 700; line-height: 1.1; }
+.stat-label { display: block; margin-top: 0.25rem; color: var(--muted); }
+
+/* Є нові замовлення - це головне, тому картка виділена */
+.stat.is-alert { background: #fff8e1; border-color: #e6c24d; }
+.stat.is-alert .stat-value { color: #7a5200; }
+.stat.is-alert .stat-label { color: #7a5200; }
+
+.section { margin-bottom: 2rem; }
+.section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+.section-head h3 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+
+/* ---------- Пошук і фільтри ---------- */
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.filters input[type="search"] { flex: 1 1 14rem; width: auto; min-width: 12rem; }
+.filters select { width: auto; }
+
+/* ---------- Сторінка маршруту ---------- */
+
+.route-title-card { max-width: none; }
+.route-title-card strong { font-size: 1.25rem; }
+
+.form-error { margin-bottom: 1rem; }
+
+.stop-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 0.6rem; }
+
+.stop-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr auto;
+    gap: 0.75rem;
+    align-items: start;
+    padding: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+}
+.stop-row.is-deleted { display: none; }
+
+.stop-num-wrap { text-align: center; padding-top: 0.15rem; }
+.stop-num { display: block; font-size: 1.4rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+.stop-role { display: block; font-size: 0.75rem; color: var(--muted); min-height: 1.1em; }
+
+.stop-fields { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.75rem; }
+.stop-field { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.stop-field label { font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+
+.stop-controls { display: flex; align-items: center; gap: 0.4rem; padding-top: 1.35rem; }
+
+@media (max-width: 700px) {
+    .stop-row { grid-template-columns: 2.75rem 1fr; }
+    .stop-fields { grid-template-columns: 1fr 1fr; }
+    .stop-field-main { grid-column: 1 / -1; }
+    .stop-controls { grid-column: 1 / -1; justify-content: flex-end; padding-top: 0; }
+}

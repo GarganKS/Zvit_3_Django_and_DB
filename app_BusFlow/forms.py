@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group, User
-from django.forms import inlineformset_factory
+from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.utils import timezone
 
 from app_BusFlow.models import (
@@ -125,10 +125,67 @@ class OrderPlanForm(forms.ModelForm):
         )
 
 
-StopOnRouteFormSet = inlineformset_factory(
-    Route,
-    StopOnRoute,
-    fields=("stop", "stop_sequence", "arrival_time", "departure_time"),
-    extra=2,
-    can_delete=True,
-)
+class StopOnRouteForm(forms.ModelForm):
+    """Рядок зупинки маршруту. Номер у порядку проходження ставить сторінка."""
+
+    class Meta:
+        model = StopOnRoute
+        fields = ("stop", "stop_sequence", "arrival_time", "departure_time")
+        widgets = {
+            "stop_sequence": forms.HiddenInput(),
+            "arrival_time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
+            "departure_time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M"),
+        }
+        labels = {
+            "stop": "Зупинка",
+            "arrival_time": "Прибуття",
+            "departure_time": "Відправлення",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Номер не обов'язковий: якщо його немає, береться порядок рядків.
+        self.fields["stop_sequence"].required = False
+        self.fields["stop"].empty_label = "Оберіть зупинку"
+
+
+class BaseStopOnRouteFormSet(BaseInlineFormSet):
+    MIN_STOPS = 2
+
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        active = [
+            form
+            for form in self.forms
+            if form.cleaned_data
+            and not self._should_delete_form(form)
+            and form.cleaned_data.get("stop")
+        ]
+        if len(active) < self.MIN_STOPS:
+            raise forms.ValidationError(
+                "Додайте щонайменше дві зупинки: початкову й кінцеву."
+            )
+        # Порядок: за номером зі сторінки, а за його відсутності - за порядком рядків.
+        ordered = sorted(
+            enumerate(active),
+            key=lambda item: (
+                item[1].cleaned_data.get("stop_sequence") or float("inf"),
+                item[0],
+            ),
+        )
+        for number, (_, form) in enumerate(ordered, start=1):
+            form.instance.stop_sequence = number
+
+
+def route_formset_class(extra=0):
+    """Формсет зупинок маршруту; extra - скільки порожніх рядків показати."""
+    return inlineformset_factory(
+        Route,
+        StopOnRoute,
+        form=StopOnRouteForm,
+        formset=BaseStopOnRouteFormSet,
+        extra=extra,
+        can_delete=True,
+    )

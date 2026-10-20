@@ -1,41 +1,31 @@
 {% extends 'base.html' %}
-{% block title %}Зупинки маршруту - BusFlow{% endblock %}
+{% load static %}
+{% block title %}{% if is_new %}Новий маршрут{% else %}Редагування маршруту{% endif %} - BusFlow{% endblock %}
 {% block content %}
-<h2>Маршрут: {{ route.display_name }}</h2>
-<p class="muted">Вкажіть зупинки у порядку проходження - у полі «Номер» поставте порядковий номер.</p>
-<form method="post">
+<div class="page-head">
+    <h2>{% if is_new %}Новий маршрут{% else %}Редагування маршруту{% endif %}</h2>
+</div>
+<div class="card route-title-card">
+    <span class="muted">Назва формується автоматично: початкова - кінцева зупинка</span><br />
+    <strong id="route-title">{{ route.display_name }}</strong>
+</div>
+<p class="muted">Вкажіть зупинки в порядку проходження. Час прибуття й відправлення необов'язковий.</p>
+<form method="post" id="route-form">
     {% csrf_token %}
     {{ formset.management_form }}
     {% if formset.non_form_errors %}
-    <ul class="errorlist">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    <ul class="errorlist form-error">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
     {% endif %}
-    <div class="table-wrap">
-    <table>
-        <thead>
-            <tr>
-                <th>Зупинка</th>
-                <th>Номер</th>
-                <th>Прибуття</th>
-                <th>Відправлення</th>
-                <th>Видалити</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for field in formset %}
-            <tr>
-                <td>{{ field.stop }}{{ field.stop.errors }}</td>
-                <td>{{ field.stop_sequence }}{{ field.stop_sequence.errors }}</td>
-                <td>{{ field.arrival_time }}{{ field.arrival_time.errors }}</td>
-                <td>{{ field.departure_time }}{{ field.departure_time.errors }}</td>
-                <td>{% if field.instance.pk %}{{ field.DELETE }}{% endif %}{{ field.id }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
+    <ol class="stop-list" id="stop-list">
+        {% for form in formset %}{% include "app_BusFlow/_stop_row.html" %}{% endfor %}
+    </ol>
+    <template id="stop-row-template">{% include "app_BusFlow/_stop_row.html" with form=formset.empty_form %}</template>
+    <noscript><p class="muted">Для додавання, видалення й зміни порядку зупинок потрібен JavaScript.</p></noscript>
+    <button type="button" class="btn btn-secondary" id="add-stop">+ Додати зупинку</button>
     <div class="form-actions">
-        <button type="submit">Зберегти</button>
-        <a href="{% url 'routes' %}">Назад до маршрутів</a>
+        <button type="submit">Зберегти маршрут</button>
+        <a href="{% url 'routes' %}">Скасувати</a>
     </div>
 </form>
 {% endblock %}
+{% block scripts %}<script src="{% static 'js/route_form.js' %}"></script>{% endblock %}

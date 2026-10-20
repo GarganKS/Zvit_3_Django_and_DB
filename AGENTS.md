@@ -25,7 +25,11 @@ There is no lint/format/typecheck step. `app_BusFlow/tests.py` is still empty �
   - `urls.py` — named routes `home`, `routes`, `trips`, `vehicles`, `orders` at `""`, `/routes/`, `/trips/`, `/vehicles/`, `/orders/`.
   - `admin.py` — all five models registered plainly (`admin.site.register`), no custom admin classes.
   - `templates/app_BusFlow/` — `home.html`, `route_list.html`, `trip_list.html`, `vehicle_list.html`, `order_list.html`.
-- `templates/base.html` — project-level base template (from `TEMPLATES DIRS`): nav bar with active-tab highlighting via `request.resolver_match.url_name`, all CSS inlined in a `<style>` block (no static files, no `static/` dir).
+- `templates/base.html` - project-level base template (from `TEMPLATES DIRS`): nav bar with active-tab highlighting via `request.resolver_match.url_name`. No inline CSS: all styles live in `static/css/style.css` (project-level `static/`, registered via `STATICFILES_DIRS`), page scripts in `static/js/`. Shared include `templates/_status.html` renders a status badge.
+- Status badge colors: the `status_slug` filter in `app_BusFlow/templatetags/busflow_extras.py` maps each status text to a key, and `.badge-<key>` in `style.css` sets its color. Adding a status means adding it to both.
+- `/` (`HomeView`) is a dashboard: manager sees counters + new orders + upcoming trips, client sees own orders, guest sees login links.
+- Route create/edit is one page (`RouteUpdateView`; `RouteCreateView` subclasses it, and a `Route` row is only created on save). Stops are an inline formset (`route_formset_class` in `forms.py`); `static/js/route_form.js` adds/removes/reorders rows and the formset renumbers `stop_sequence` server-side. A route needs at least 2 stops.
+- Trips and vehicles lists have search/filters (`q`, `status`, `period` for trips). Text search uses `matching_ids` in `views.py` (Python `casefold`), because SQLite `LIKE` is case-insensitive only for ASCII, so `icontains` would not match Cyrillic.
 - `db.sqlite3` — live dev DB, gitignored but present locally; migrated through `0001`–`0007` and **populated with hand-added demo data — don't assume it's empty**. Older copies may sit next to it as `db.sqlite3.bak-*` (also gitignored).
 
 ## Data model notes

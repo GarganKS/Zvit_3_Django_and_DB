@@ -1,22 +1,146 @@
 {% extends 'base.html' %}
 {% block title %}Головна - BusFlow{% endblock %}
 {% block content %}
-<h2>Головна</h2>
-<p>Вітаємо в BusFlow. Оберіть розділ.</p>
-<div class="home-links">
-    {% if is_manager %}
-    <a href="{% url 'orders' %}" class="primary">Замовлення</a>
-    <a href="{% url 'trips' %}">Рейси</a>
-    <a href="{% url 'routes' %}">Маршрути</a>
-    <a href="{% url 'stops' %}">Зупинки</a>
-    <a href="{% url 'vehicles' %}">Транспорт</a>
-    {% elif is_client %}
-    <a href="{% url 'order_new' %}" class="primary">Замовити автобус</a>
-    <a href="{% url 'orders' %}">Мої замовлення</a>
-    <a href="{% url 'trips' %}">Рейси</a>
+{% if is_manager %}
+<div class="page-head">
+    <h2>Огляд</h2>
+</div>
+
+<div class="stats">
+    <a href="{% url 'orders' %}?status=Нова" class="stat{% if new_orders_count %} is-alert{% endif %}">
+        <span class="stat-value">{{ new_orders_count }}</span>
+        <span class="stat-label">Нові замовлення{% if new_orders_count %} - потребують дії{% endif %}</span>
+    </a>
+    <a href="{% url 'trips' %}?period=today" class="stat">
+        <span class="stat-value">{{ trips_today_count }}</span>
+        <span class="stat-label">Рейси сьогодні</span>
+    </a>
+    <a href="{% url 'vehicles' %}?status=Очікує" class="stat">
+        <span class="stat-value">{{ free_vehicles_count }}</span>
+        <span class="stat-label">Вільні автобуси</span>
+    </a>
+</div>
+
+<section class="section">
+    <div class="section-head">
+        <h3>Нові замовлення</h3>
+        <a href="{% url 'orders' %}?status=Нова">Усі нові</a>
+    </div>
+    {% if new_orders %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Клієнт</th>
+                <th>Напрямок</th>
+                <th>Пасажирів</th>
+                <th>Відправлення</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in new_orders %}
+            <tr>
+                <td>
+                    {{ order.client.username }}
+                    <br /><span class="muted">{{ order.client.client_profile.organization }}</span>
+                </td>
+                <td>{{ order.direction }}</td>
+                <td>{{ order.passengers }}</td>
+                <td>{{ order.departure_time|date:"d.m.Y H:i" }}</td>
+                <td class="actions"><a href="{% url 'order_plan' order.pk %}" class="btn btn-small">Опрацювати</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
     {% else %}
+    <p class="muted">Нових замовлень немає.</p>
+    {% endif %}
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <h3>Найближчі рейси</h3>
+        <a href="{% url 'trips' %}?period=upcoming">Усі майбутні</a>
+    </div>
+    {% if upcoming_trips %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Маршрут</th>
+                <th>Відправлення</th>
+                <th>Транспорт</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip in upcoming_trips %}
+            <tr>
+                <td><strong>{{ trip.route.display_name }}</strong></td>
+                <td>{{ trip.departure_time|date:"d.m.Y H:i" }}</td>
+                <td>{{ trip.vehicle.name|default:"-" }}</td>
+                <td>{% include "_status.html" with status=trip.status %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Запланованих рейсів немає. <a href="{% url 'trip_new' %}">Додати рейс</a></p>
+    {% endif %}
+</section>
+
+{% elif is_client %}
+<div class="page-head">
+    <h2>Головна</h2>
+    <a href="{% url 'order_new' %}" class="btn">Замовити автобус</a>
+</div>
+
+<section class="section">
+    <div class="section-head">
+        <h3>Мої замовлення</h3>
+        {% if my_orders %}<a href="{% url 'orders' %}">Усі замовлення</a>{% endif %}
+    </div>
+    {% if my_orders %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Напрямок</th>
+                <th>Пасажирів</th>
+                <th>Відправлення</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in my_orders %}
+            <tr>
+                <td>{{ order.direction }}</td>
+                <td>{{ order.passengers }}</td>
+                <td>{{ order.departure_time|date:"d.m.Y H:i" }}</td>
+                <td>{% include "_status.html" with status=order.status %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Ви ще не робили замовлень. Натисніть «Замовити автобус», щоб надіслати першу заявку.</p>
+    {% endif %}
+</section>
+
+{% elif user.is_authenticated %}
+<h2>Головна</h2>
+<p class="muted">Для вашого акаунта поки немає доступних розділів. Зверніться до адміністратора.</p>
+
+{% else %}
+<h2>Вітаємо в BusFlow</h2>
+<p class="muted">Увійдіть, щоб переглядати рейси та замовляти автобус.</p>
+<div class="home-links">
     <a href="{% url 'login' %}" class="primary">Увійти</a>
     <a href="{% url 'register' %}">Реєстрація</a>
-    {% endif %}
 </div>
+{% endif %}
 {% endblock %}

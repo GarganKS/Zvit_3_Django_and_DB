@@ -1,0 +1,32 @@
+{# Один рядок зупинки маршруту. Використовується і для наявних, і для нових (empty_form). #}
+<li class="stop-row">
+    <div class="stop-num-wrap">
+        <span class="stop-num">1</span>
+        <span class="stop-role"></span>
+    </div>
+    <div class="stop-fields">
+        <div class="stop-field stop-field-main">
+            <label for="{{ form.stop.id_for_label }}">{{ form.stop.label }}</label>
+            {{ form.stop }}
+            {{ form.stop.errors }}
+        </div>
+        <div class="stop-field">
+            <label for="{{ form.arrival_time.id_for_label }}">{{ form.arrival_time.label }}</label>
+            {{ form.arrival_time }}
+            {{ form.arrival_time.errors }}
+        </div>
+        <div class="stop-field">
+            <label for="{{ form.departure_time.id_for_label }}">{{ form.departure_time.label }}</label>
+            {{ form.departure_time }}
+            {{ form.departure_time.errors }}
+        </div>
+        {{ form.non_field_errors }}
+    </div>
+    <div class="stop-controls">
+        <button type="button" class="icon-btn" data-action="up" title="Підняти вище" aria-label="Підняти вище">&uarr;</button>
+        <button type="button" class="icon-btn" data-action="down" title="Опустити нижче" aria-label="Опустити нижче">&darr;</button>
+        <button type="button" class="link-button danger" data-action="delete">Видалити</button>
+    </div>
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+    <span hidden>{{ form.DELETE }}</span>
+</li>
