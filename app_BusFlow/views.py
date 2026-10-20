@@ -6,7 +6,13 @@ from django.db.models import Count, F, Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 
 from app_BusFlow.forms import (
     ClientRegisterForm,
@@ -213,7 +219,9 @@ class OrderCreateView(ClientRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.client = self.request.user
         response = super().form_valid(form)
-        messages.success(self.request, "Замовлення надіслано. Очікуйте опрацювання менеджером.")
+        messages.success(
+            self.request, "Замовлення надіслано. Очікуйте опрацювання менеджером."
+        )
         return response
 
 
