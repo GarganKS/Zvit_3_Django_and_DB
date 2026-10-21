@@ -1,0 +1,23 @@
+{% comment %}
+Карта маршруту/зупинки. Очікує змінну map_data (dict) з ключами
+"stops" (зупинки) та "paths" (траси маршрутів).
+{% endcomment %}
+<div class="map-box">
+    {% if map_data.stops %}
+    <div class="map-canvas" id="busflow-map" data-map-data="busflow-map-data"></div>
+    {% else %}
+    <div class="map-canvas map-empty"></div>
+    <p class="muted map-note">Показувати поки що нічого: зупинок немає.</p>
+    {% endif %}
+    {% if map_note %}<p class="muted map-note">{{ map_note }}</p>{% endif %}
+    {% with path=map_data.paths.0 %}
+        {% if path %}
+            {% if path.source == "straight" %}
+            <p class="muted map-note">Траса орієнтовна: сервіс маршрутів зараз недоступний, показано пряму лінію між зупинками.</p>
+            {% else %}
+            <p class="muted map-note">Довжина маршруту: {{ path.distance_km }} км, орієнтовний час у дорозі: {{ path.duration_min }} хв.</p>
+            {% endif %}
+        {% endif %}
+    {% endwith %}
+</div>
+{{ map_data|json_script:"busflow-map-data" }}

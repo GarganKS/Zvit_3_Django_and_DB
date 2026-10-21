@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - BusFlow{% endblock %}
+{% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h2>{{ title }}</h2>
+</div>
+
+<div class="stop-form">
+    <form method="post" class="stop-form-fields">
+        {% csrf_token %}
+        <div class="form-grid">{{ form.as_div }}</div>
+        <div class="form-actions">
+            <button type="submit">Зберегти</button>
+            <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Назад</a>
+        </div>
+    </form>
+
+    <section class="section stop-form-map">
+        <div class="section-head"><h3>Позначити на карті</h3></div>
+        <p class="muted">
+            Клацніть по карті - і координати зупинки підставляться у форму.
+            Маркер можна перетягнути, а координати - вписати вручну.
+        </p>
+        <div class="map-canvas map-picker" id="stop-picker"></div>
+        <div class="cluster map-actions">
+            <button type="button" class="btn btn-secondary" id="stop-picker-reset">Скинути точку</button>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}
+{% load static %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/stop_map.js' %}"></script>
+{% endblock %}

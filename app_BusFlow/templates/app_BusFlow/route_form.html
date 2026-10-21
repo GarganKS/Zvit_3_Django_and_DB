@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}{% if is_new %}Новий маршрут{% else %}Редагування маршруту{% endif %} - BusFlow{% endblock %}
+{% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
     <h2>{% if is_new %}Новий маршрут{% else %}Редагування маршруту{% endif %}</h2>
@@ -29,5 +30,16 @@
         <a href="{% url 'routes' %}">Скасувати</a>
     </div>
 </form>
+
+<section class="section route-preview">
+    <div class="section-head"><h3>Попередній перегляд маршруту</h3></div>
+    <p class="muted">Траса по вулицях будується автоматично за вибраними зупинками.</p>
+    <div class="map-canvas" id="route-map"></div>
+</section>
+{{ stops_coords|json_script:"route-stops-coords" }}
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/route_form.js' %}"></script>{% endblock %}
+{% block scripts %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/route_form.js' %}"></script>
+<script src="{% static 'js/route_map.js' %}"></script>
+{% endblock %}

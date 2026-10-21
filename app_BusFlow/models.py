@@ -72,6 +72,29 @@ class StopOnRoute(models.Model):
         return f"{self.stop_sequence} ({self.stop.name}): {self.route.display_name}"
 
 
+class RoutePath(models.Model):
+    """Кеш реальної траси маршруту (лінія по вулицях), обчисленої сервісом OSRM.
+
+    geometry - JSON зі списком точок [[широта, довгота], ...] у порядку
+    проходження зупинок. Зберігається, щоб не питати зовнішній сервіс
+    під час кожного перегляду сторінки.
+    """
+
+    id = pk_field("route_path_id")
+    route = models.OneToOneField(Route, models.CASCADE, related_name="path")
+    signature = models.CharField(max_length=64)
+    geometry = models.TextField()
+    distance_m = models.FloatField(default=0)
+    duration_s = models.FloatField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "route_path"
+
+    def __str__(self):
+        return f"Траса маршруту {self.route_id}"
+
+
 class Vehicle(models.Model):
     class Status(models.TextChoices):
         WAITING = "Очікує", "Очікує"

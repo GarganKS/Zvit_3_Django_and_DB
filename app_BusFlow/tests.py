@@ -1,5 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
+import urllib.error
+from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
 from django.db.models.deletion import ProtectedError
@@ -11,12 +13,14 @@ from app_BusFlow.models import (
     Client,
     Order,
     Route,
+    RoutePath,
     Stop,
     StopOnRoute,
     Ticket,
     Trip,
     Vehicle,
 )
+from app_BusFlow.routing import get_route_path
 from app_BusFlow.services import refresh_trip_statuses
 
 
@@ -309,6 +313,86 @@ class PagesTests(Base):
         data["name"] = "Експрес"
         self.client.post(reverse("route_new"), data)
         self.assertTrue(Route.objects.filter(name="Експрес").exists())
+
+
+class MapTests(Base):
+    """Карти: сторінки деталей мають карту, траса рахується й кешується."""
+
+    fake_path = {
+        "points": [[50.45, 30.52], [50.25, 28.65], [49.83, 24.02]],
+        "distance_m": 543000,
+        "duration_s": 28560,
+    }
+
+    def test_route_page_shows_map_with_stops(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("route_detail", args=[self.route.pk]))
+        self.assertContains(response, 'id="busflow-map"')
+        self.assertContains(response, '"lat": 1.0')  # координати зупинки в JSON
+
+    def test_trip_page_shows_map(self):
+        trip = self.make_trip()
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("trip_detail", args=[trip.pk]))
+        self.assertContains(response, 'id="busflow-map"')
+
+    def test_stop_page_shows_map(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("stop_detail", args=[self.s1.pk]))
+        self.assertContains(response, 'id="busflow-map"')
+
+    def test_stop_form_has_map_picker(self):
+        self.client.force_login(self.manager)
+        for url in (reverse("stop_new"), reverse("stop_edit", args=[self.s1.pk])):
+            response = self.client.get(url)
+            self.assertContains(response, 'id="stop-picker"')
+            self.assertContains(response, "js/stop_map.js")
+
+    def test_route_form_has_preview_map(self):
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("route_edit", args=[self.route.pk]))
+        self.assertContains(response, 'id="route-map"')
+        self.assertContains(response, "js/route_map.js")
+
+    def test_path_is_cached_in_database(self):
+        with patch("app_BusFlow.routing.fetch_osrm", return_value=self.fake_path) as fetch:
+            path = get_route_path(self.route)
+            self.assertEqual(path["source"], "osrm")
+            self.assertEqual(fetch.call_count, 1)
+            self.assertEqual(RoutePath.objects.count(), 1)
+            # Другий виклик бере трасу з кешу.
+            again = get_route_path(self.route)
+            self.assertEqual(fetch.call_count, 1)
+            self.assertEqual(again["points"], self.fake_path["points"])
+
+    def test_path_is_recalculated_when_stops_change(self):
+        with patch("app_BusFlow.routing.fetch_osrm", return_value=self.fake_path) as fetch:
+            get_route_path(self.route)
+            StopOnRoute.objects.create(
+                route=self.route, stop=Stop.objects.create(
+                    name="Рівне", address="c", latitude=3, longitude=3
+                ), stop_sequence=3,
+            )
+            get_route_path(self.route)
+            self.assertEqual(fetch.call_count, 2)
+
+    def test_fallback_to_straight_line_when_service_fails(self):
+        with patch("app_BusFlow.routing.fetch_osrm", return_value=None):
+            path = get_route_path(self.route)
+            self.assertEqual(path["source"], "straight")
+            self.assertEqual(path["points"], [[1.0, 1.0], [2.0, 2.0]])
+            # Пряму лінію не кешуємо - трасу треба порахувати пізніше.
+            self.assertEqual(RoutePath.objects.count(), 0)
+
+    def test_network_error_does_not_break_page(self):
+        with patch("app_BusFlow.routing.routing_enabled", return_value=True), patch(
+            "urllib.request.urlopen", side_effect=urllib.error.URLError("немає зв'язку")
+        ):
+            path = get_route_path(self.route)
+        self.assertEqual(path["source"], "straight")
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("route_detail", args=[self.route.pk]))
+        self.assertEqual(response.status_code, 200)
 
 
 class TicketSaleTests(Base):

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Рейс #{{ trip.pk }} - BusFlow{% endblock %}
+{% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
     <h2>Рейс #{{ trip.pk }}</h2>
@@ -22,6 +23,11 @@
         <dt>Ціна квитка</dt><dd>{{ trip.price }} грн</dd>
     </dl>
 </div>
+
+<section class="section">
+    <div class="section-head"><h3>Карта маршруту</h3></div>
+    {% include "app_BusFlow/_map.html" with map_data=route_map %}
+</section>
 
 <section class="section">
     <div class="section-head"><h3>Зупинки</h3></div>
@@ -62,3 +68,4 @@
     {% endif %}
 </section>
 {% endblock %}
+{% block scripts %}{% include "app_BusFlow/_leaflet_scripts.html" %}{% endblock %}

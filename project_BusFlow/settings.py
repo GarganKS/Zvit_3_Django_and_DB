@@ -120,6 +120,15 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 
+# Карти та маршрути
+# MAP_ROUTING_ENABLED - чи рахувати реальні траси маршрутів через зовнішній
+# сервіс OSRM (потрібен інтернет). Якщо False, показується пряма лінія між
+# зупинками.
+MAP_ROUTING_ENABLED = True
+OSRM_URL = "https://router.project-osrm.org/route/v1/driving/"
+OSRM_TIMEOUT = 15
+
+
 # Auth
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"

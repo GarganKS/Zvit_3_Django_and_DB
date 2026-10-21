@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ route.display_name }} - BusFlow{% endblock %}
+{% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
     <h2>{{ route.display_name }}</h2>
@@ -8,6 +9,11 @@
         <a href="{% url 'routes' %}">Усі маршрути</a>
     </div>
 </div>
+
+<section class="section">
+    <div class="section-head"><h3>Карта маршруту</h3></div>
+    {% include "app_BusFlow/_map.html" with map_data=route_map %}
+</section>
 
 <section class="section">
     <div class="section-head"><h3>Зупинки</h3></div>
@@ -58,3 +64,4 @@
     {% endif %}
 </section>
 {% endblock %}
+{% block scripts %}{% include "app_BusFlow/_leaflet_scripts.html" %}{% endblock %}

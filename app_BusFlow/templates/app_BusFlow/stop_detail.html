@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ stop.name }} - BusFlow{% endblock %}
+{% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
     <h2>{{ stop.name }}</h2>
@@ -15,6 +16,10 @@
     </dl>
 </div>
 <section class="section">
+    <div class="section-head"><h3>Карта</h3></div>
+    {% include "app_BusFlow/_map.html" with map_data=stop_map %}
+</section>
+<section class="section">
     <div class="section-head"><h3>Маршрути через цю зупинку</h3></div>
     <div class="cluster">
         {% for route in routes %}<a href="{% url 'route_detail' route.pk %}" class="chip">{{ route.display_name }}</a>
@@ -22,3 +27,4 @@
     </div>
 </section>
 {% endblock %}
+{% block scripts %}{% include "app_BusFlow/_leaflet_scripts.html" %}{% endblock %}

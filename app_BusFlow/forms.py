@@ -64,6 +64,16 @@ class StopForm(forms.ModelForm):
     class Meta:
         model = Stop
         fields = ("name", "address", "latitude", "longitude")
+        labels = {
+            "name": "Назва зупинки",
+            "address": "Адреса",
+            "latitude": "Широта",
+            "longitude": "Довгота",
+        }
+        help_texts = {
+            "latitude": "Координати можна поставити клацанням по карті.",
+            "longitude": "Координати можна поставити клацанням по карті.",
+        }
 
 
 class TripForm(forms.ModelForm):

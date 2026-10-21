@@ -32,6 +32,7 @@ from app_BusFlow.forms import (
 )
 from app_BusFlow.mixins import ClientRequiredMixin, ManagerRequiredMixin, TitleMixin
 from app_BusFlow.models import Order, Route, Stop, StopOnRoute, Ticket, Trip, Vehicle
+from app_BusFlow.routing import route_map_data, stop_map_data
 from app_BusFlow.services import refresh_trip_statuses, return_ticket, sell_ticket
 
 # ==================================== Вхід і дашборд ====================================
@@ -179,6 +180,11 @@ class RouteDetailView(ManagerRequiredMixin, DetailView):
             Prefetch("trip_set", queryset=Trip.objects.select_related("vehicle")),
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["route_map"] = route_map_data(self.object)
+        return context
+
 
 class RouteUpdateView(ManagerRequiredMixin, View):
     """Одна сторінка для створення й редагування маршруту (назва + список зупинок)."""
@@ -200,6 +206,16 @@ class RouteUpdateView(ManagerRequiredMixin, View):
             "form": form,
             "formset": formset,
             "is_new": not route.pk,
+            # Координати всіх зупинок - для попереднього перегляду на карті.
+            "stops_coords": [
+                {
+                    "id": stop.pk,
+                    "name": stop.name,
+                    "lat": float(stop.latitude),
+                    "lon": float(stop.longitude),
+                }
+                for stop in Stop.objects.all().order_by("name")
+            ],
         }
         return render(request, self.template_name, context)
 
@@ -344,6 +360,7 @@ class TripDetailView(LoginRequiredMixin, DetailView):
         context["tickets_total"] = sum(counts.values())
         context["tickets_free"] = counts.get("Вільний", 0)
         context["tickets_sold"] = counts.get("Продано", 0)
+        context["route_map"] = route_map_data(self.object.route)
         if roles(self.request)["is_manager"]:
             context["sold_tickets"] = self.object.tickets.filter(
                 status=Ticket.Status.SOLD
@@ -458,13 +475,14 @@ class StopDetailView(ManagerRequiredMixin, DetailView):
         context["routes"] = Route.objects.filter(
             stoponroute__stop=self.object
         ).distinct()
+        context["stop_map"] = stop_map_data(self.object)
         return context
 
 
 class StopCreateView(ManagerRequiredMixin, TitleMixin, CreateView):
     form_class = StopForm
     title = "Додати зупинку"
-    template_name = "app_BusFlow/object_form.html"
+    template_name = "app_BusFlow/stop_form.html"
     success_url = reverse_lazy("stops")
 
 
@@ -472,7 +490,7 @@ class StopUpdateView(ManagerRequiredMixin, TitleMixin, UpdateView):
     model = Stop
     form_class = StopForm
     title = "Редагувати зупинку"
-    template_name = "app_BusFlow/object_form.html"
+    template_name = "app_BusFlow/stop_form.html"
     success_url = reverse_lazy("stops")
 
 
