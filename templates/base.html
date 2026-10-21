@@ -19,7 +19,6 @@
                 {% endif %}
                 {% if is_client %}
                 <a href="{% url 'orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Мої замовлення</a>
-                <a href="{% url 'order_new' %}" class="nav-link {% if request.resolver_match.url_name == 'order_new' %}active{% endif %}">Замовити автобус</a>
                 <a href="{% url 'trips' %}" class="nav-link {% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
                 {% endif %}
                 <div class="nav-right">

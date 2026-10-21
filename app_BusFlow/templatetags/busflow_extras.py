@@ -4,9 +4,6 @@ from app_BusFlow.models import Order, Ticket, Trip, Vehicle
 
 register = template.Library()
 
-# Кожен статус має власний колір (клас .badge-<slug> у static/css/style.css).
-# Однакові значення в різних моделях ("Заплановано", "Скасовано", "Завершено")
-# збігаються за текстом, тому мають однаковий колір.
 STATUS_SLUGS = {
     Order.Status.NEW: "new",
     Order.Status.PLANNED: "planned",
@@ -27,13 +24,11 @@ STATUS_SLUGS = {
 
 @register.filter
 def status_slug(value):
-    """Повертає ключ кольору для тексту статусу; невідомий статус - neutral."""
     return STATUS_SLUGS.get(str(value), "neutral")
 
 
 @register.simple_tag(takes_context=True)
 def remove_param(context, key):
-    """Поточна адреса списку без параметра key (для кнопки "скинути фільтр")."""
     params = context["request"].GET.copy()
     params.pop(key, None)
     query = params.urlencode()

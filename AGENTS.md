@@ -30,7 +30,6 @@ Django 6.1.2 + SQLite report project ("BusFlow") on Python 3.14. Passenger bus l
 python manage.py check          # always run after model changes
 python manage.py makemigrations && python manage.py migrate
 python manage.py test
-python manage.py seed_demo      # demo data on an empty DB
 python manage.py update_statuses  # trip progress by time (cron)
 ```
 
