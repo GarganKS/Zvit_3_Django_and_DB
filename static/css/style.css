@@ -493,9 +493,17 @@ button.btn-secondary:hover {
     .stop-controls { grid-column: 1 / -1; justify-content: flex-end; padding-top: 0; }
 }
 
+/* ---------- Клікабельний рядок таблиці рейсів ---------- */
+
+/* Рядок відкриває деталі рейсу (див. static/js/trip_list.js) */
+tr[data-trip-url] { cursor: pointer; }
+tr[data-trip-url]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
 /* ---------- Відступи (єдина шкала) ---------- */
-/* Той самий ритм, що в пошуку й фільтрах: 0.5rem між дрібними елементами,
-   0.75rem між групами, 1rem між блоками. Класи нижче замінюють ручні margin. */
+
 
 :root {
     --space-1: 0.25rem;

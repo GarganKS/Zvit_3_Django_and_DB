@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load busflow_extras %}
 {% block title %}Рейси - BusFlow{% endblock %}
 {% block content %}
@@ -48,7 +49,7 @@
     </thead>
     <tbody>
         {% for trip in object_list %}
-        <tr>
+        <tr data-trip-url="{% url 'trip_detail' trip.pk %}" tabindex="0">
             <td class="muted"><a href="{% url 'trip_detail' trip.pk %}">{{ trip.id }}</a></td>
             <td><strong>{% if is_manager %}<a href="{% url 'route_detail' trip.route_id %}">{{ trip.route.display_name }}</a>{% else %}<a href="{% url 'trip_detail' trip.pk %}">{{ trip.route.display_name }}</a>{% endif %}</strong></td>
             <td>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</td>
@@ -60,6 +61,9 @@
             {% if is_manager %}
             <td class="actions">
                 <div class="cluster">
+                    {% if trip.status == trip.Status.SCHEDULED and trip.tickets_free %}
+                    <a href="{% url 'ticket_sell' trip.pk %}" class="btn btn-small">Продати квиток</a>
+                    {% endif %}
                     <a href="{% url 'trip_edit' trip.pk %}">Редагувати</a>
                     <a href="{% url 'trip_delete' trip.pk %}" class="danger">Видалити</a>
                 </div>
@@ -77,4 +81,7 @@
     </tbody>
 </table>
 </div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/trip_list.js' %}" defer></script>
 {% endblock %}

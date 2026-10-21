@@ -371,3 +371,37 @@ class TicketSaleTests(Base):
         self.client.force_login(self.client_user)
         self.assertNotContains(self.client.get(reverse("trip_detail", args=[self.trip.pk])), "Секретний")
         self.assertEqual(self.client.get(reverse("ticket_sell", args=[self.trip.pk])).status_code, 403)
+
+
+class TripListUiTests(Base):
+    """Список рейсів: кнопка продажу квитка і клікабельні рядки."""
+
+    def setUp(self):
+        self.trip = self.make_trip()
+        self.client.force_login(self.manager)
+
+    def test_sell_button_shown_for_scheduled_trip_with_free_tickets(self):
+        response = self.client.get(reverse("trips"))
+        self.assertContains(response, reverse("ticket_sell", args=[self.trip.pk]))
+        self.assertContains(response, "Продати квиток")
+
+    def test_sell_button_hidden_when_no_free_tickets(self):
+        self.trip.tickets.update(status=Ticket.Status.SOLD)
+        self.assertNotContains(self.client.get(reverse("trips")), "Продати квиток")
+
+    def test_sell_button_hidden_for_non_scheduled_trip(self):
+        Trip.objects.filter(pk=self.trip.pk).update(status=Trip.Status.COMPLETED)
+        self.assertNotContains(self.client.get(reverse("trips")), "Продати квиток")
+
+    def test_sell_button_hidden_from_clients(self):
+        self.client.force_login(self.client_user)
+        response = self.client.get(reverse("trips"))
+        self.assertNotContains(response, "Продати квиток")
+        self.assertNotContains(response, reverse("ticket_sell", args=[self.trip.pk]))
+
+    def test_row_points_to_trip_detail(self):
+        response = self.client.get(reverse("trips"))
+        self.assertContains(response, f'data-trip-url="{reverse("trip_detail", args=[self.trip.pk])}"')
+
+    def test_row_click_script_is_loaded(self):
+        self.assertContains(self.client.get(reverse("trips")), "js/trip_list.js")

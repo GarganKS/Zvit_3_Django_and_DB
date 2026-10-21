@@ -12,7 +12,7 @@ Django 6.1.2 + SQLite report project ("BusFlow") on Python 3.14. Passenger bus l
   - `views.py`, `urls.py` - list/detail/create/edit/delete views, order actions, `RoleLoginView`.
   - `management/commands/` - `update_statuses` (run periodically), `seed_demo`.
   - `admin.py` - `Manager` proxy section (group assigned automatically), `User` admin with client inline.
-- `templates/base.html`, `templates/_status.html`, `static/css/style.css` (spacing scale `--space-*`, `.cluster`, `.stack`, `.tile` dashboard cards), `static/js/route_form.js`.
+- `templates/base.html`, `templates/_status.html`, `static/css/style.css` (spacing scale `--space-*`, `.cluster`, `.stack`, `.tile` dashboard cards), `static/js/route_form.js`, `static/js/trip_list.js` (клік по рядку списку рейсів відкриває деталі рейсу; `tr[data-trip-url]`).
 - Status badge colors: `status_slug` filter in `templatetags/busflow_extras.py` + `.badge-<key>` in `style.css`. Adding a status means adding it to both.
 
 ## Business rules

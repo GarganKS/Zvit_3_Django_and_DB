@@ -267,6 +267,11 @@ class TripsListView(LoginRequiredMixin, ListView):
                     filter=Q(tickets__status=Ticket.Status.SOLD),
                     distinct=True,
                 ),
+                tickets_free=Count(
+                    "tickets",
+                    filter=Q(tickets__status=Ticket.Status.FREE),
+                    distinct=True,
+                ),
             )
             .order_by(F("departure_time").asc(nulls_last=True))
         )
