@@ -5,6 +5,9 @@
     <h2>Маршрути</h2>
     <a href="{% url 'route_new' %}" class="btn">Додати маршрут</a>
 </div>
+{% if stop_filter %}
+<div class="chips"><span class="chip">Зупинка: {{ stop_filter.name }} <a href="{% url 'routes' %}" aria-label="Скинути фільтр">&times;</a></span></div>
+{% endif %}
 <div class="table-wrap">
 <table>
     <thead>
@@ -12,6 +15,8 @@
             <th>ID</th>
             <th>Назва</th>
             <th>Зупинки</th>
+            <th>Автобуси</th>
+            <th>Рейси</th>
             <th></th>
         </tr>
     </thead>
@@ -19,12 +24,12 @@
         {% for route in object_list %}
         <tr>
             <td class="muted">{{ route.id }}</td>
-            <td><strong>{{ route.display_name }}</strong></td>
+            <td><strong><a href="{% url 'route_detail' route.pk %}">{{ route.display_name }}</a></strong></td>
             <td>
                 <ol class="stops">
                     {% for stop_on_route in route.stoponroute_set.all %}
                     <li>
-                        {{ stop_on_route.stop.name }}
+                        <a href="{% url 'stop_detail' stop_on_route.stop_id %}">{{ stop_on_route.stop.name }}</a>
                         <span class="stop-address">{{ stop_on_route.stop.address }}</span>
                         {% if forloop.first %}<span class="stop-badge start">Початок</span>{% endif %}
                         {% if forloop.last and not forloop.first %}<span class="stop-badge end">Кінець</span>{% endif %}
@@ -32,14 +37,24 @@
                     {% empty %}-{% endfor %}
                 </ol>
             </td>
+            <td>
+                <div class="stack">
+                {% for vehicle in route.used_vehicles %}
+                    <a href="{% url 'vehicle_detail' vehicle.pk %}">{{ vehicle.name }}</a>
+                {% empty %}<span class="muted">-</span>{% endfor %}
+                </div>
+            </td>
+            <td><a href="{% url 'trips' %}?route={{ route.pk }}">{{ route.trip_set.all|length }}</a></td>
             <td class="actions">
-                <a href="{% url 'route_edit' route.pk %}">Редагувати</a>
-                <a href="{% url 'route_delete' route.pk %}" class="danger">Видалити</a>
+                <div class="cluster">
+                    <a href="{% url 'route_edit' route.pk %}">Редагувати</a>
+                    <a href="{% url 'route_delete' route.pk %}" class="danger">Видалити</a>
+                </div>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4" class="empty">Маршрутів ще немає.</td>
+            <td colspan="6" class="empty">Маршрутів ще немає.</td>
         </tr>
         {% endfor %}
     </tbody>

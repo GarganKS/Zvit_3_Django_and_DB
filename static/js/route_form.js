@@ -7,7 +7,7 @@
     var form = document.getElementById("route-form");
     var total = form.querySelector('[name$="-TOTAL_FORMS"]');
     var template = document.getElementById("stop-row-template");
-    var titleEl = document.getElementById("route-title");
+    var nameInput = document.getElementById("id_name");
 
     function allRows() {
         return Array.prototype.slice.call(list.querySelectorAll(".stop-row"));
@@ -42,15 +42,13 @@
             row.querySelector('[data-action="down"]').disabled = i === rows.length - 1;
         });
 
+        // Якщо назву не введено, показуємо підказку "перша - остання зупинка".
         var first = rows.length ? selectedText(rows[0]) : "";
         var last = rows.length ? selectedText(rows[rows.length - 1]) : "";
-        if (first && last) {
-            titleEl.textContent = first === last ? first : first + " - " + last;
-        } else if (first) {
-            titleEl.textContent = first;
-        } else {
-            titleEl.textContent = "Новий маршрут";
-        }
+        var auto = "Назва за зупинками";
+        if (first && last) auto = first === last ? first : first + " - " + last;
+        else if (first) auto = first;
+        if (nameInput) nameInput.placeholder = auto;
     }
 
     function move(row, step) {

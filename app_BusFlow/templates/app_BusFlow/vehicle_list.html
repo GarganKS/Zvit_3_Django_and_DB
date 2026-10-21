@@ -34,15 +34,17 @@
         {% for vehicle in object_list %}
         <tr>
             <td class="muted">{{ vehicle.id }}</td>
-            <td><strong>{{ vehicle.name }}</strong></td>
+            <td><strong><a href="{% url 'vehicle_detail' vehicle.pk %}">{{ vehicle.name }}</a></strong></td>
             <td>{{ vehicle.plate_number }}</td>
             <td>{{ vehicle.driver|default:"-" }}</td>
             <td>{{ vehicle.capacity }}</td>
             <td>{% include "_status.html" with status=vehicle.status %}</td>
-            <td>{{ vehicle.trip_count }}</td>
+            <td>{% if vehicle.trip_count %}<a href="{% url 'trips' %}?vehicle={{ vehicle.pk }}">{{ vehicle.trip_count }}</a>{% else %}<span class="muted">0</span>{% endif %}</td>
             <td class="actions">
-                <a href="{% url 'vehicle_edit' vehicle.pk %}">Редагувати</a>
-                <a href="{% url 'vehicle_delete' vehicle.pk %}" class="danger">Видалити</a>
+                <div class="cluster">
+                    <a href="{% url 'vehicle_edit' vehicle.pk %}">Редагувати</a>
+                    <a href="{% url 'vehicle_delete' vehicle.pk %}" class="danger">Видалити</a>
+                </div>
             </td>
         </tr>
         {% empty %}

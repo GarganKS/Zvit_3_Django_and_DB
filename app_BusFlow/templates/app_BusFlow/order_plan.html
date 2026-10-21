@@ -3,21 +3,21 @@
 {% block content %}
 <h2>Опрацювання замовлення #{{ order.pk }}</h2>
 <div class="card">
-    <strong>{{ order.direction }}</strong>
+    <strong>{{ order.destination }}</strong>
     <dl>
-        <dt>Клієнт</dt><dd>{{ order.client.username }} ({{ order.client.client_profile.organization }})</dd>
+        <dt>Клієнт</dt><dd>{{ order.client.client.name|default:order.client.username }}</dd>
         <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
         <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
-        {% if order.comment %}<dt>Коментар</dt><dd>{{ order.comment }}</dd>{% endif %}
-    </dl>
+            </dl>
 </div>
 <div class="form-narrow">
     <form method="post">
         {% csrf_token %}
         <div class="form-grid">{{ form.as_div }}</div>
         <p class="muted form-note">Оберіть лише вільний автобус (статус «Очікує») з місткістю не меншою за кількість пасажирів.</p>
+        <p class="muted form-note">Після збереження автобус резервується, а клієнт має підтвердити замовлення.</p>
         <div class="form-actions">
-            <button type="submit">Запланувати</button>
+            <button type="submit">Запропонувати клієнту</button>
             <a href="{% url 'orders' %}">Назад до замовлень</a>
         </div>
     </form>

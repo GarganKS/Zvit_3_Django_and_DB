@@ -1,11 +1,20 @@
 {% extends 'base.html' %}
+{% load busflow_extras %}
 {% block title %}Рейси - BusFlow{% endblock %}
 {% block content %}
 <div class="page-head">
     <h2>Рейси</h2>
     {% if is_manager %}<a href="{% url 'trip_new' %}" class="btn">Додати рейс</a>{% endif %}
 </div>
+{% if route_filter or vehicle_filter %}
+<div class="chips">
+    {% if route_filter %}<span class="chip">Маршрут: {{ route_filter.display_name }} <a href="{% remove_param 'route' %}" aria-label="Скинути фільтр">&times;</a></span>{% endif %}
+    {% if vehicle_filter %}<span class="chip">Автобус: {{ vehicle_filter }} <a href="{% remove_param 'vehicle' %}" aria-label="Скинути фільтр">&times;</a></span>{% endif %}
+</div>
+{% endif %}
 <form method="get" class="filters">
+    {% if route_filter %}<input type="hidden" name="route" value="{{ route_filter.pk }}" />{% endif %}
+    {% if vehicle_filter %}<input type="hidden" name="vehicle" value="{{ vehicle_filter.pk }}" />{% endif %}
     <input type="search" name="q" value="{{ q }}" placeholder="Пошук: зупинка або автобус" aria-label="Пошук" />
     <select name="status" aria-label="Статус">
         <option value="">Усі статуси</option>
@@ -39,17 +48,19 @@
     <tbody>
         {% for trip in object_list %}
         <tr>
-            <td class="muted">{{ trip.id }}</td>
-            <td><strong>{{ trip.route.display_name }}</strong></td>
+            <td class="muted"><a href="{% url 'trip_detail' trip.pk %}">{{ trip.id }}</a></td>
+            <td><strong>{% if is_manager %}<a href="{% url 'route_detail' trip.route_id %}">{{ trip.route.display_name }}</a>{% else %}<a href="{% url 'trip_detail' trip.pk %}">{{ trip.route.display_name }}</a>{% endif %}</strong></td>
             <td>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</td>
             <td>{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</td>
             <td>{% include "_status.html" with status=trip.status %}</td>
             <td>{{ trip.price }}₴</td>
-            <td>{{ trip.vehicle.name|default:"-" }}</td>
+            <td>{% if is_manager %}<a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a>{% else %}{{ trip.vehicle.name|default:"-" }}{% endif %}</td>
             {% if is_manager %}
             <td class="actions">
-                <a href="{% url 'trip_edit' trip.pk %}">Редагувати</a>
-                <a href="{% url 'trip_delete' trip.pk %}" class="danger">Видалити</a>
+                <div class="cluster">
+                    <a href="{% url 'trip_edit' trip.pk %}">Редагувати</a>
+                    <a href="{% url 'trip_delete' trip.pk %}" class="danger">Видалити</a>
+                </div>
             </td>
             {% endif %}
         </tr>

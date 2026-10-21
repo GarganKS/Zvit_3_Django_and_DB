@@ -1,44 +1,40 @@
 # AGENTS.md
 
-Django 6.1.2 + SQLite report project ("BusFlow") on Python 3.14. Read-only (temporary) passenger bus line tracking: routes, stops, trips, vehicles. All UI text, model choices and error messages are in Ukrainian. No README, no CI, no lint/typecheck config, no dependency manifest — `.venv` is the only source of truth for installed packages (Django + asgiref + sqlparse only; don't assume anything else is importable).
-
-## Commands
-
-Run from the repo root with the project venv (it has no `pip` module; use `python -m ensurepip` if a package must be installed):
-
-```bash
-.venv/bin/python manage.py runserver
-.venv/bin/python manage.py check          # verify model changes with THIS, not just test
-.venv/bin/python manage.py makemigrations
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py test           # single test: ... test app_BusFlow.tests.SomeTest.test_method
-```
-
-There is no lint/format/typecheck step. `app_BusFlow/tests.py` is still empty — no test suite exists yet.
+Django 6.1.2 + SQLite report project ("BusFlow") on Python 3.14. Passenger bus line management: routes, stops, trips, vehicles, tickets, client orders. All UI text, model choices and error messages are in Ukrainian. No README, no CI, no lint/typecheck config, no dependency manifest — `.venv` is the only source of truth for installed packages (Django + asgiref + sqlparse only; don't assume anything else is importable).
 
 ## Layout
 
-- `project_BusFlow/` — project config. Root `urls.py` mounts `app_BusFlow.urls` at `""` plus `admin/`. `settings.py` is stock plus a `MAILERS` dict (console email backend) at the bottom.
-- `app_BusFlow/` — the single app:
-  - `models.py` — `Stop`, `Route`, through-model `StopOnRoute`, `Vehicle`, `Trip`.
-  - `views.py` — `HomeView`/`OrdersView` (`TemplateView`), `RoutesListView`/`TripsListView`/`VehiclesListView` (`ListView`).
-  - `urls.py` — named routes `home`, `routes`, `trips`, `vehicles`, `orders` at `""`, `/routes/`, `/trips/`, `/vehicles/`, `/orders/`.
-  - `admin.py` — all five models registered plainly (`admin.site.register`), no custom admin classes.
-  - `templates/app_BusFlow/` — `home.html`, `route_list.html`, `trip_list.html`, `vehicle_list.html`, `order_list.html`.
-- `templates/base.html` - project-level base template (from `TEMPLATES DIRS`): nav bar with active-tab highlighting via `request.resolver_match.url_name`. No inline CSS: all styles live in `static/css/style.css` (project-level `static/`, registered via `STATICFILES_DIRS`), page scripts in `static/js/`. Shared include `templates/_status.html` renders a status badge.
-- Status badge colors: the `status_slug` filter in `app_BusFlow/templatetags/busflow_extras.py` maps each status text to a key, and `.badge-<key>` in `style.css` sets its color. Adding a status means adding it to both.
-- `/` (`HomeView`) is a dashboard: manager sees counters + new orders + upcoming trips, client sees own orders, guest sees login links.
-- Route create/edit is one page (`RouteUpdateView`; `RouteCreateView` subclasses it, and a `Route` row is only created on save). Stops are an inline formset (`route_formset_class` in `forms.py`); `static/js/route_form.js` adds/removes/reorders rows and the formset renumbers `stop_sequence` server-side. A route needs at least 2 stops.
-- Trips and vehicles lists have search/filters (`q`, `status`, `period` for trips). Text search uses `matching_ids` in `views.py` (Python `casefold`), because SQLite `LIKE` is case-insensitive only for ASCII, so `icontains` would not match Cyrillic.
-- `db.sqlite3` — live dev DB, gitignored but present locally; migrated through `0001`–`0007` and **populated with hand-added demo data — don't assume it's empty**. Older copies may sit next to it as `db.sqlite3.bak-*` (also gitignored).
+- `project_BusFlow/` - project config. Root `urls.py` mounts `app_BusFlow.urls` at `""` plus `admin/`.
+- `app_BusFlow/` - the single app:
+  - `models.py` - mirrors the ERD (MySQL Workbench): `db_table` and PK column names (`trip_id`, ...) match the diagram; in code the PK is still `id`/`pk`. Models: `Stop`, `Route`, `StopOnRoute`, `Vehicle`, `Trip`, `Ticket`, `Client` (login account via `user` OneToOne, `related_name="client"`), `Order`, proxy `Manager`.
+  - `services.py` - automations: `sync_vehicle_status`, ticket generation, `refresh_trip_statuses` (time-based trip progress).
+  - `signals.py` - hooks Trip/Order save/delete into `services.py` (this is what frees a vehicle when a trip is deleted).
+  - `views.py`, `urls.py` - list/detail/create/edit/delete views, order actions, `RoleLoginView`.
+  - `management/commands/` - `update_statuses` (run periodically), `seed_demo`.
+  - `admin.py` - `Manager` proxy section (group assigned automatically), `User` admin with client inline.
+- `templates/base.html`, `templates/_status.html`, `static/css/style.css` (spacing scale `--space-*`, `.cluster`, `.stack`, `.tile` dashboard cards), `static/js/route_form.js`.
+- Status badge colors: `status_slug` filter in `templatetags/busflow_extras.py` + `.badge-<key>` in `style.css`. Adding a status means adding it to both.
 
-## Data model notes
+## Business rules
 
-- `Route` has **no `name` field** (removed in migration 0004). Its name is the `display_name` property: first stop by `stop_sequence` - last stop, falling back to "Новий маршрут" (no pk) or `Маршрут #<pk>` (no stops). It reads `stoponroute_set`, so use `prefetch_related` on routes shown in lists.
-- `StopOnRoute` (route <-> stop) carries `stop_sequence` plus nullable `arrival_time`/`departure_time`.
-- `Trip.departure_time`/`arrival_time` are nullable `DateTimeField`s; `Trip.vehicle` is a required FK (`related_name="trip"`).
-- Status fields (`Vehicle.status`, `Trip.status`) are Ukrainian `TextChoices` values guarded twice: model-level `clean()` and a DB `CheckConstraint` — extend both when adding a status.
-- Time-order constraints (`trip_arrival_after_departure`, `stoponroute_arrival_lte_departure`) skip rows where either time is NULL.
+- Vehicle status is derived by `sync_vehicle_status`: Repair/Decommissioned are manual and never overwritten; active order (Awaiting/Planned) -> Rented; trip In progress -> On route; otherwise Waiting.
+- Order lifecycle: Нова -> (manager plans: vehicle+price) -> Очікує підтвердження -> (client confirms) -> Заплановано -> Завершено. Client may decline an awaiting order; manager may cancel awaiting/planned. Transitions live in `Order` methods (`plan`, `confirm`, `decline`, `reject`, `cancel`, `complete`).
+- Trip creation generates `vehicle.capacity` free `Ticket`s; cancelling a trip cancels free tickets.
+- Vehicle/Route/Stop deletion is `PROTECT`ed; delete views show a message instead of failing.
+- Superusers are redirected from `/` and after login to `/admin/`.
+- Route `name` is optional in the form: blank means "first - last stop" (max 45 chars).
+
+## Commands
+
+```bash
+python manage.py check          # always run after model changes
+python manage.py makemigrations && python manage.py migrate
+python manage.py test
+python manage.py seed_demo      # demo data on an empty DB
+python manage.py update_statuses  # trip progress by time (cron)
+```
+
+Time zone is `Europe/Kyiv`; on Windows install `tzdata` (`pip install tzdata`).
 
 ## Gotchas
 

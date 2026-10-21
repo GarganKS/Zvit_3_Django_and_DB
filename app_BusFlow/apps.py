@@ -22,6 +22,11 @@ MANAGER_PERMISSION_CODENAMES = [
     "change_vehicle",
     "delete_vehicle",
     "view_vehicle",
+    "view_ticket",
+    "add_ticket",
+    "change_ticket",
+    "delete_ticket",
+    "view_client",
     "view_order",
     "change_order",
     "process_order",
@@ -51,4 +56,6 @@ class AppBusflowConfig(AppConfig):
     name = "app_BusFlow"
 
     def ready(self):
+        from app_BusFlow import signals  # noqa: F401
+
         post_migrate.connect(ensure_groups, sender=self)

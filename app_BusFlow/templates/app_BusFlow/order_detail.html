@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Замовлення #{{ order.pk }} - BusFlow{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h2>Замовлення #{{ order.pk }}</h2>
+    <a href="{% url 'orders' %}">Усі замовлення</a>
+</div>
+<div class="card">
+    <strong>{{ order.destination }}</strong>
+    <dl>
+        <dt>Статус</dt><dd>{% include "_status.html" with status=order.status %}</dd>
+        {% if is_manager %}
+        <dt>Клієнт</dt>
+        <dd><a href="{% url 'orders' %}?client={{ order.client_id }}">{{ order.client.client.name|default:order.client.username }}</a>
+            <span class="muted">{{ order.client.client.phone }}</span></dd>
+        {% endif %}
+        <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
+        <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
+        {% if order.vehicle %}
+        <dt>Автобус</dt>
+        <dd>{% if is_manager %}<a href="{% url 'vehicle_detail' order.vehicle_id %}">{{ order.vehicle }}</a>{% else %}{{ order.vehicle.name }} (місць: {{ order.vehicle.capacity }}){% endif %}</dd>
+        <dt>Ціна</dt><dd><strong>{{ order.total_price }} грн</strong></dd>
+        {% endif %}
+    </dl>
+</div>
+<div class="cluster">
+    {% if is_manager %}
+        {% if order.status == order.Status.NEW %}
+        <a href="{% url 'order_plan' order.pk %}" class="btn">Опрацювати</a>
+        <a href="{% url 'order_reject' order.pk %}" class="danger">Відхилити</a>
+        {% elif order.status == order.Status.AWAITING %}
+        <span class="muted">Чекаємо підтвердження клієнта</span>
+        <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+        {% elif order.status == order.Status.PLANNED %}
+        <a href="{% url 'order_complete' order.pk %}" class="btn">Завершити</a>
+        <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+        {% endif %}
+    {% elif order.status == order.Status.AWAITING %}
+    <a href="{% url 'order_confirm' order.pk %}" class="btn">Підтвердити</a>
+    <a href="{% url 'order_decline' order.pk %}" class="danger">Відмовитися</a>
+    {% elif order.status == order.Status.NEW %}
+    <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+    {% endif %}
+</div>
+{% endblock %}

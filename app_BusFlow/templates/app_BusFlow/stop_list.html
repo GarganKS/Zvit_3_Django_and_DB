@@ -13,6 +13,7 @@
             <th>Назва</th>
             <th>Адреса</th>
             <th>Координати</th>
+            <th>Маршрути</th>
             <th></th>
         </tr>
     </thead>
@@ -20,17 +21,20 @@
         {% for stop in object_list %}
         <tr>
             <td class="muted">{{ stop.id }}</td>
-            <td><strong>{{ stop.name }}</strong></td>
+            <td><strong><a href="{% url 'stop_detail' stop.pk %}">{{ stop.name }}</a></strong></td>
             <td>{{ stop.address }}</td>
             <td class="muted">{{ stop.latitude }}, {{ stop.longitude }}</td>
+            <td>{% if stop.route_count %}<a href="{% url 'routes' %}?stop={{ stop.pk }}">{{ stop.route_count }}</a>{% else %}<span class="muted">0</span>{% endif %}</td>
             <td class="actions">
-                <a href="{% url 'stop_edit' stop.pk %}">Редагувати</a>
-                <a href="{% url 'stop_delete' stop.pk %}" class="danger">Видалити</a>
+                <div class="cluster">
+                    <a href="{% url 'stop_edit' stop.pk %}">Редагувати</a>
+                    <a href="{% url 'stop_delete' stop.pk %}" class="danger">Видалити</a>
+                </div>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" class="empty">Зупинок ще немає.</td>
+            <td colspan="6" class="empty">Зупинок ще немає.</td>
         </tr>
         {% endfor %}
     </tbody>

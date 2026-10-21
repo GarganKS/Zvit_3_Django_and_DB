@@ -10,16 +10,6 @@
             {{ form.stop }}
             {{ form.stop.errors }}
         </div>
-        <div class="stop-field">
-            <label for="{{ form.arrival_time.id_for_label }}">{{ form.arrival_time.label }}</label>
-            {{ form.arrival_time }}
-            {{ form.arrival_time.errors }}
-        </div>
-        <div class="stop-field">
-            <label for="{{ form.departure_time.id_for_label }}">{{ form.departure_time.label }}</label>
-            {{ form.departure_time }}
-            {{ form.departure_time.errors }}
-        </div>
         {{ form.non_field_errors }}
     </div>
     <div class="stop-controls">

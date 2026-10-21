@@ -1,35 +1,60 @@
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 
-# Create your models here.
+
+def pk_field(column):
+    """Первинний ключ INT AUTO_INCREMENT зі стовпцем <таблиця>_id."""
+    return models.AutoField(primary_key=True, db_column=column)
 
 
 class Stop(models.Model):
+    id = pk_field("stop_id")
     name = models.CharField(max_length=45)
     address = models.CharField(max_length=255)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
+
+    class Meta:
+        db_table = "stop"
 
     def __str__(self):
         return self.name
 
 
 class Route(models.Model):
+    id = pk_field("route_id")
+    name = models.CharField(max_length=45, blank=True)
     stops = models.ManyToManyField(Stop, through="StopOnRoute")
+
+    class Meta:
+        db_table = "route"
+
+    def auto_name(self):
+        """Назва за зупинками: перша - остання (до 45 символів, як у ERD)."""
+        links = sorted(self.stoponroute_set.all(), key=lambda link: link.stop_sequence)
+        if not links:
+            return ""
+        first = links[0].stop.name
+        last = links[-1].stop.name
+        name = first if first == last else f"{first} - {last}"
+        return name[:45]
 
     @property
     def display_name(self):
-        """Назва маршруту: перша зупинка - остання зупинка."""
+        if self.name:
+            return self.name
         if not self.pk:
             return "Новий маршрут"
-        # .all() бере дані з prefetch-кешу, якщо маршрути завантажені заздалегідь.
-        links = sorted(self.stoponroute_set.all(), key=lambda link: link.stop_sequence)
-        if not links:
-            return f"Маршрут #{self.pk}"
-        first = links[0].stop.name
-        last = links[-1].stop.name
-        return first if first == last else f"{first} - {last}"
+        return self.auto_name() or f"Маршрут #{self.pk}"
+
+    def used_vehicles(self):
+        """Автобуси, які їздять цим маршрутом (унікальні, з рейсів)."""
+        seen = {}
+        for trip in self.trip_set.all():
+            seen.setdefault(trip.vehicle_id, trip.vehicle)
+        return list(seen.values())
 
     def __str__(self):
         return self.display_name
@@ -37,33 +62,11 @@ class Route(models.Model):
 
 class StopOnRoute(models.Model):
     route = models.ForeignKey(Route, models.CASCADE)
-    stop = models.ForeignKey(Stop, models.CASCADE)
+    stop = models.ForeignKey(Stop, models.PROTECT)
     stop_sequence = models.IntegerField()
-    arrival_time = models.TimeField(null=True, blank=True)
-    departure_time = models.TimeField(null=True, blank=True)
 
     class Meta:
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(arrival_time__lte=models.F("departure_time"))
-                | models.Q(arrival_time__isnull=True)
-                | models.Q(departure_time__isnull=True),
-                name="stoponroute_arrival_lte_departure",
-            )
-        ]
-
-    def clean(self):
-        super().clean()
-        if (
-            self.arrival_time
-            and self.departure_time
-            and self.arrival_time > self.departure_time
-        ):
-            raise ValidationError(
-                {
-                    "arrival_time": "Прибуття на зупинці не може бути пізніше відправлення."
-                }
-            )
+        db_table = "stop_on_route"
 
     def __str__(self):
         return f"{self.stop_sequence} ({self.stop.name}): {self.route.display_name}"
@@ -77,8 +80,9 @@ class Vehicle(models.Model):
         REPAIR = "В ремонті", "В ремонті"
         DECOMMISSIONED = "Списано", "Списано"
 
+    id = pk_field("vehicle_id")
     name = models.CharField(max_length=45)
-    driver = models.CharField(max_length=45, null=True)
+    driver = models.CharField(max_length=45, null=True, blank=True)
     plate_number = models.CharField(max_length=8, unique=True)
     capacity = models.PositiveIntegerField()
     status = models.CharField(
@@ -86,6 +90,7 @@ class Vehicle(models.Model):
     )
 
     class Meta:
+        db_table = "vehicle"
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(
@@ -112,16 +117,18 @@ class Trip(models.Model):
         COMPLETED = "Завершено", "Завершено"
         CANCELLED = "Скасовано", "Скасовано"
 
-    route = models.ForeignKey(Route, models.CASCADE)
+    id = pk_field("trip_id")
+    route = models.ForeignKey(Route, models.PROTECT)
     status = models.CharField(
         max_length=45, choices=Status.choices, default=Status.SCHEDULED
     )
-    price = models.DecimalField(max_digits=8, decimal_places=2)
-    vehicle = models.ForeignKey(Vehicle, models.CASCADE, related_name="trip")
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    vehicle = models.ForeignKey(Vehicle, models.PROTECT, related_name="trip")
     departure_time = models.DateTimeField(null=True, blank=True)
     arrival_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        db_table = "trip"
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(
@@ -157,44 +164,87 @@ class Trip(models.Model):
         return f"{self.route.display_name} ({self.status}): {self.price}"
 
 
-class ClientProfile(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, models.CASCADE, related_name="client_profile"
+class Ticket(models.Model):
+    """Квиток на рейс. Для кожного рейсу автоматично створюється стільки
+    квитків, скільки місць у автобуса (див. signals.py)."""
+
+    class Status(models.TextChoices):
+        FREE = "Вільний", "Вільний"
+        SOLD = "Продано", "Продано"
+        CANCELLED = "Скасовано", "Скасовано"
+
+    id = pk_field("ticket_id")
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=45, choices=Status.choices, default=Status.FREE
     )
-    organization = models.CharField(max_length=100)
-    contact_person = models.CharField(max_length=100)
-    phone = models.CharField(max_length=10)
-    created_at = models.DateTimeField(auto_now_add=True)
+    trip = models.ForeignKey(Trip, models.CASCADE, related_name="tickets")
+
+    class Meta:
+        db_table = "ticket"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(status__in=["Вільний", "Продано", "Скасовано"]),
+                name="ticket_status_valid",
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.organization} ({self.user.username})"
+        return f"Квиток #{self.pk} ({self.status})"
+
+
+class Client(models.Model):
+    """Клієнт (раніше ClientProfile). Пов'язаний з акаунтом для входу в систему."""
+
+    id = pk_field("client_id")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, models.CASCADE, related_name="client"
+    )
+    name = models.CharField(max_length=45)
+    phone = models.CharField(max_length=45)
+    registration_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "client"
+
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
+
+
+class Manager(User):
+    class Meta:
+        proxy = True
+        verbose_name = "менеджер"
+        verbose_name_plural = "Менеджери"
 
 
 class Order(models.Model):
     class Status(models.TextChoices):
         NEW = "Нова", "Нова"
+        AWAITING = "Очікує підтвердження", "Очікує підтвердження"
         PLANNED = "Заплановано", "Заплановано"
         REJECTED = "Відхилено", "Відхилено"
         CANCELLED = "Скасовано", "Скасовано"
         COMPLETED = "Завершено", "Завершено"
 
+    id = pk_field("order_id")
+    status = models.CharField(max_length=45, choices=Status.choices, default=Status.NEW)
+    total_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    departure_time = models.DateTimeField()
+    destination = models.CharField(max_length=45)
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL, models.CASCADE, related_name="orders"
     )
-    direction = models.TextField()
-    passengers = models.PositiveIntegerField()
-    departure_time = models.DateTimeField()
-    status = models.CharField(max_length=45, choices=Status.choices, default=Status.NEW)
-    comment = models.TextField(blank=True)
     vehicle = models.ForeignKey(
-        Vehicle, models.SET_NULL, null=True, blank=True, related_name="orders"
+        Vehicle, models.PROTECT, null=True, blank=True, related_name="orders"
     )
-    arrival_time = models.DateTimeField(null=True, blank=True)
-    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    passengers = models.PositiveIntegerField()
 
     class Meta:
-        ordering = ["-created_at"]
+        db_table = "order"
+        ordering = ["-id"]
         permissions = [
             ("process_order", "Може опрацьовувати замовлення"),
         ]
@@ -203,6 +253,7 @@ class Order(models.Model):
                 condition=models.Q(
                     status__in=[
                         "Нова",
+                        "Очікує підтвердження",
                         "Заплановано",
                         "Відхилено",
                         "Скасовано",
@@ -216,8 +267,8 @@ class Order(models.Model):
                 name="order_passengers_positive",
             ),
             models.CheckConstraint(
-                condition=models.Q(vehicle__isnull=True, price__isnull=True)
-                | models.Q(vehicle__isnull=False, price__isnull=False),
+                condition=models.Q(vehicle__isnull=True, total_price__isnull=True)
+                | models.Q(vehicle__isnull=False, total_price__isnull=False),
                 name="order_vehicle_price_together",
             ),
         ]
@@ -228,18 +279,51 @@ class Order(models.Model):
             raise ValidationError(
                 {"passengers": "Кількість пасажирів має бути більшою за 0."}
             )
-        if (
-            self.departure_time
-            and self.arrival_time
-            and self.arrival_time < self.departure_time
-        ):
-            raise ValidationError(
-                {"arrival_time": "Час прибуття не може бути раніше часу відправлення."}
-            )
         if self.vehicle and self.passengers and self.vehicle.capacity < self.passengers:
             raise ValidationError(
                 {"vehicle": "Місткість автобуса менша за кількість пасажирів."}
             )
 
+    def _move(self, allowed, to_status, **fields):
+        if self.status not in allowed:
+            raise ValidationError(
+                f"Перехід зі статусу «{self.status}» у «{to_status}» неможливий."
+            )
+        self.status = to_status
+        for name, value in fields.items():
+            setattr(self, name, value)
+        self.save(update_fields=["status", *fields])
+
+    def plan(self, vehicle, total_price):
+        """Менеджер опрацював заявку: автобус і ціна призначені, чекаємо клієнта."""
+        self._move(
+            {self.Status.NEW},
+            self.Status.AWAITING,
+            vehicle=vehicle,
+            total_price=total_price,
+        )
+
+    def confirm(self):
+        """Клієнт погодився з автобусом і ціною."""
+        self._move({self.Status.AWAITING}, self.Status.PLANNED)
+
+    def decline(self):
+        """Клієнт відмовився від запропонованих умов."""
+        self._move({self.Status.AWAITING}, self.Status.CANCELLED)
+
+    def reject(self):
+        self._move({self.Status.NEW}, self.Status.REJECTED)
+
+    def cancel(self, *, by_manager):
+        allowed = (
+            {self.Status.AWAITING, self.Status.PLANNED}
+            if by_manager
+            else {self.Status.NEW}
+        )
+        self._move(allowed, self.Status.CANCELLED)
+
+    def complete(self):
+        self._move({self.Status.PLANNED}, self.Status.COMPLETED)
+
     def __str__(self):
-        return f"#{self.pk} {self.direction} ({self.status})"
+        return f"#{self.pk} {self.destination} ({self.status})"

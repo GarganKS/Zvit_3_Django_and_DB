@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}{{ route.display_name }} - BusFlow{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h2>{{ route.display_name }}</h2>
+    <div class="cluster">
+        <a href="{% url 'route_edit' route.pk %}" class="btn btn-secondary">Редагувати</a>
+        <a href="{% url 'routes' %}">Усі маршрути</a>
+    </div>
+</div>
+
+<section class="section">
+    <div class="section-head"><h3>Зупинки</h3></div>
+    <ol class="stops">
+        {% for link in route.stoponroute_set.all %}
+        <li>
+            <a href="{% url 'stop_detail' link.stop_id %}">{{ link.stop.name }}</a>
+            <span class="stop-address">{{ link.stop.address }}</span>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <h3>Автобуси на маршруті</h3>
+    </div>
+    <div class="cluster">
+        {% for vehicle in route.used_vehicles %}
+        <a href="{% url 'vehicle_detail' vehicle.pk %}" class="chip">{{ vehicle }}</a>
+        {% empty %}<p class="muted">Автобусів ще немає: за цим маршрутом немає рейсів.</p>{% endfor %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <h3>Рейси</h3>
+        <a href="{% url 'trips' %}?route={{ route.pk }}">Відкрити у списку рейсів</a>
+    </div>
+    {% if route.trip_set.all %}
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>Відправлення</th><th>Автобус</th><th>Статус</th><th>Ціна</th></tr></thead>
+        <tbody>
+            {% for trip in route.trip_set.all %}
+            <tr>
+                <td><a href="{% url 'trip_detail' trip.pk %}">{{ trip.departure_time|date:"d.m.Y H:i"|default:"Без часу" }}</a></td>
+                <td><a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a></td>
+                <td>{% include "_status.html" with status=trip.status %}</td>
+                <td>{{ trip.price }} грн</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">Рейсів за цим маршрутом ще немає. <a href="{% url 'trip_new' %}">Додати рейс</a></p>
+    {% endif %}
+</section>
+{% endblock %}

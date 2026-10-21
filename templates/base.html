@@ -9,7 +9,7 @@
     <body>
         <header class="site-header">
             <nav class="site-nav">
-                <a href="{% url 'home' %}" class="brand">BusFlow</a>
+                <a href="{% if is_admin %}{% url 'admin:index' %}{% else %}{% url 'home' %}{% endif %}" class="brand">BusFlow</a>
                 {% if is_manager %}
                 <a href="{% url 'routes' %}" class="nav-link {% if request.resolver_match.url_name == 'routes' %}active{% endif %}">Маршрути</a>
                 <a href="{% url 'stops' %}" class="nav-link {% if request.resolver_match.url_name == 'stops' %}active{% endif %}">Зупинки</a>

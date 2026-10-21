@@ -492,3 +492,103 @@ button.btn-secondary:hover {
     .stop-field-main { grid-column: 1 / -1; }
     .stop-controls { grid-column: 1 / -1; justify-content: flex-end; padding-top: 0; }
 }
+
+/* ---------- Відступи (єдина шкала) ---------- */
+/* Той самий ритм, що в пошуку й фільтрах: 0.5rem між дрібними елементами,
+   0.75rem між групами, 1rem між блоками. Класи нижче замінюють ручні margin. */
+
+:root {
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+}
+
+/* Горизонтальний ряд елементів (кнопки, посилання, мітки) з однаковим проміжком */
+.cluster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+}
+td.actions .cluster { justify-content: flex-end; }
+td.actions a { margin-left: 0; }
+
+/* Вертикальний стовпчик елементів */
+.stack { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.route-name-field { margin-bottom: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+.section > p { margin-bottom: var(--space-3); }
+.section > .cluster { margin-bottom: var(--space-2); }
+.page-head .cluster { gap: var(--space-3); }
+.card + .cluster, .card + .section { margin-top: var(--space-4); }
+.stats .stat { margin: 0; }
+.stop-badge { margin-left: var(--space-2); }
+
+/* ---------- Мітки-фільтри ("Маршрут: ... x") ---------- */
+
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.2rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--text);
+    font-size: 0.95rem;
+}
+a.chip:hover { border-color: var(--accent); text-decoration: none; }
+
+/* ---------- Картки дашборда ---------- */
+
+.tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: var(--space-4);
+}
+.tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4) 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg);
+}
+.tile.is-alert { background: #fff8e1; border-color: #e6c24d; }
+.tile-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+.tile-title { font-weight: 600; font-size: 1.05rem; line-height: 1.3; }
+.tile-meta {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-1) var(--space-4);
+}
+.tile-meta dt { color: var(--muted); }
+.tile-meta dd { margin: 0; }
+.tile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-top: auto;
+}
+.tile-actions:empty { display: none; }
+.tile-actions a.danger { color: var(--danger); }
+.tile-actions a.btn { color: #fff; }
+
+.stats { margin-bottom: var(--space-5); }
+.section-head { margin-bottom: var(--space-3); }
+
+/* ---------- Нові статуси ---------- */
+
+.badge-awaiting { background: #dff1fb; color: #0b5a80; }  /* Очікує підтвердження */
+.badge-sold     { background: #d6efdc; color: #17622f; }  /* Продано (квиток) */
