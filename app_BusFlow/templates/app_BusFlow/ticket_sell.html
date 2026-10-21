@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Продаж квитка - BusFlow{% endblock %}
+{% block content %}
+<div class="form-narrow">
+    <h2>Продаж квитка</h2>
+    <p class="muted">Рейс: <a href="{% url 'trip_detail' trip.pk %}">{{ trip.route.display_name }}</a>,
+        {{ trip.departure_time|date:"d.m.Y H:i"|default:"без часу" }}. Ціна: {{ trip.price }} грн.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">{{ form.as_div }}</div>
+        <div class="form-actions">
+            <button type="submit">Продати</button>
+            <a href="{% url 'trip_detail' trip.pk %}">Скасувати</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

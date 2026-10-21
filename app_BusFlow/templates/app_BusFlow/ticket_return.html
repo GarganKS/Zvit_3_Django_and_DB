@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Повернення квитка - BusFlow{% endblock %}
+{% block content %}
+<h2>Повернення квитка</h2>
+<p>Повернути квиток #{{ ticket.pk }} у продаж? Дані пасажира буде стерто.</p>
+<div class="card">
+    <strong>{{ ticket.trip.route.display_name }}</strong>
+    <dl>
+        <dt>Пасажир</dt><dd>{{ ticket.passenger_name }}</dd>
+        <dt>Телефон</dt><dd>{{ ticket.passenger_phone }}</dd>
+    </dl>
+</div>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+        <button type="submit" class="btn-danger">Так, повернути</button>
+        <a href="{% url 'trip_detail' ticket.trip_id %}">Ні, повернутися</a>
+    </div>
+</form>
+{% endblock %}

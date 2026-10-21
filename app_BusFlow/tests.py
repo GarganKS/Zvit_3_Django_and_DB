@@ -309,3 +309,65 @@ class PagesTests(Base):
         data["name"] = "Експрес"
         self.client.post(reverse("route_new"), data)
         self.assertTrue(Route.objects.filter(name="Експрес").exists())
+
+
+class TicketSaleTests(Base):
+    def setUp(self):
+        self.trip = self.make_trip()
+        self.client.force_login(self.manager)
+
+    def sell(self, name="Іван", phone="050111"):
+        return self.client.post(
+            reverse("ticket_sell", args=[self.trip.pk]),
+            {"passenger_name": name, "passenger_phone": phone},
+        )
+
+    def test_sell_stores_passenger_data(self):
+        self.assertEqual(self.sell().status_code, 302)
+        ticket = self.trip.tickets.get(status=Ticket.Status.SOLD)
+        self.assertEqual((ticket.passenger_name, ticket.passenger_phone), ("Іван", "050111"))
+        self.assertEqual(self.trip.tickets.filter(status=Ticket.Status.FREE).count(), 19)
+
+    def test_name_and_phone_required(self):
+        response = self.sell(name="", phone="")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.trip.tickets.filter(status=Ticket.Status.SOLD).exists())
+
+    def test_cannot_oversell(self):
+        self.trip.tickets.exclude(pk=self.trip.tickets.first().pk).update(
+            status=Ticket.Status.CANCELLED
+        )
+        self.sell()
+        self.sell("Петро", "2")
+        self.assertEqual(self.trip.tickets.filter(status=Ticket.Status.SOLD).count(), 1)
+
+    def test_cannot_sell_for_non_scheduled_trip(self):
+        Trip.objects.filter(pk=self.trip.pk).update(status=Trip.Status.COMPLETED)
+        self.sell()
+        self.assertFalse(self.trip.tickets.filter(status=Ticket.Status.SOLD).exists())
+
+    def test_return_clears_passenger(self):
+        self.sell()
+        ticket = self.trip.tickets.get(status=Ticket.Status.SOLD)
+        self.client.post(reverse("ticket_return", args=[ticket.pk]))
+        ticket.refresh_from_db()
+        self.assertEqual(ticket.status, Ticket.Status.FREE)
+        self.assertEqual((ticket.passenger_name, ticket.passenger_phone), ("", ""))
+
+    def test_trip_with_sold_tickets_cannot_be_deleted(self):
+        self.sell()
+        response = self.client.post(reverse("trip_delete", args=[self.trip.pk]), follow=True)
+        self.assertContains(response, "продані квитки")
+        self.assertTrue(Trip.objects.filter(pk=self.trip.pk).exists())
+
+    def test_trip_without_sold_tickets_can_be_deleted(self):
+        self.client.post(reverse("trip_delete", args=[self.trip.pk]))
+        self.assertFalse(Trip.objects.filter(pk=self.trip.pk).exists())
+
+    def test_list_and_detail_show_counts_and_passenger_hidden_from_clients(self):
+        self.sell("Секретний", "0509999")
+        self.assertContains(self.client.get(reverse("trips")), "1/20")
+        self.assertContains(self.client.get(reverse("trip_detail", args=[self.trip.pk])), "Секретний")
+        self.client.force_login(self.client_user)
+        self.assertNotContains(self.client.get(reverse("trip_detail", args=[self.trip.pk])), "Секретний")
+        self.assertEqual(self.client.get(reverse("ticket_sell", args=[self.trip.pk])).status_code, 403)

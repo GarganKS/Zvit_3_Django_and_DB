@@ -1,11 +1,10 @@
-"""Автоматизації: статуси автобусів, рейсів і квитків."""
+"""Автоматизації."""
 
 from django.db import transaction
 from django.utils import timezone
 
 from app_BusFlow.models import Order, Ticket, Trip, Vehicle
 
-# Ці статуси менеджер ставить вручну - автоматика їх не чіпає.
 MANUAL_VEHICLE_STATUSES = (Vehicle.Status.REPAIR, Vehicle.Status.DECOMMISSIONED)
 
 
@@ -45,7 +44,9 @@ def generate_tickets(trip):
 
 
 def cancel_free_tickets(trip):
-    trip.tickets.filter(status=Ticket.Status.FREE).update(status=Ticket.Status.CANCELLED)
+    trip.tickets.filter(status=Ticket.Status.FREE).update(
+        status=Ticket.Status.CANCELLED
+    )
 
 
 def refresh_trip_statuses():
@@ -73,3 +74,33 @@ def refresh_trip_statuses():
             trip.save(update_fields=["status"])
             changed += 1
     return changed
+
+
+def sell_ticket(trip, passenger_name, passenger_phone):
+    """Продає один вільний квиток рейсу. Повертає квиток або None, якщо вільних немає.
+
+    Зміна статусу атомарна (update ... where status = «Вільний»), тож два
+    одночасні продажі не заберуть один і той самий квиток.
+    """
+    if trip.status != Trip.Status.SCHEDULED:
+        return None
+    free_ids = trip.tickets.filter(status=Ticket.Status.FREE).values_list(
+        "pk", flat=True
+    )
+    for ticket_id in free_ids:
+        updated = Ticket.objects.filter(pk=ticket_id, status=Ticket.Status.FREE).update(
+            status=Ticket.Status.SOLD,
+            passenger_name=passenger_name,
+            passenger_phone=passenger_phone,
+        )
+        if updated:
+            return Ticket.objects.get(pk=ticket_id)
+    return None
+
+
+def return_ticket(ticket):
+    """Повертає проданий квиток у продаж і стирає дані пасажира."""
+    updated = Ticket.objects.filter(
+        pk=ticket.pk, status=Ticket.Status.SOLD, trip__status=Trip.Status.SCHEDULED
+    ).update(status=Ticket.Status.FREE, passenger_name="", passenger_phone="")
+    return bool(updated)

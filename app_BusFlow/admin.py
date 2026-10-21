@@ -30,7 +30,7 @@ class TripAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ("id", "trip", "price", "status")
+    list_display = ("id", "trip", "price", "status", "passenger_name", "passenger_phone")
     list_filter = ("status",)
 
 

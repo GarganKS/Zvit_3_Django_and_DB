@@ -20,6 +20,7 @@ Django 6.1.2 + SQLite report project ("BusFlow") on Python 3.14. Passenger bus l
 - Vehicle status is derived by `sync_vehicle_status`: Repair/Decommissioned are manual and never overwritten; active order (Awaiting/Planned) -> Rented; trip In progress -> On route; otherwise Waiting.
 - Order lifecycle: Нова -> (manager plans: vehicle+price) -> Очікує підтвердження -> (client confirms) -> Заплановано -> Завершено. Client may decline an awaiting order; manager may cancel awaiting/planned. Transitions live in `Order` methods (`plan`, `confirm`, `decline`, `reject`, `cancel`, `complete`).
 - Trip creation generates `vehicle.capacity` free `Ticket`s; cancelling a trip cancels free tickets.
+- Tickets are sold by managers only (no client purchase): `services.sell_ticket` takes one free ticket of a scheduled trip and stores `passenger_name`/`passenger_phone` (extension of the ERD); `return_ticket` frees it and clears the data. A trip with sold tickets cannot be deleted.
 - Vehicle/Route/Stop deletion is `PROTECT`ed; delete views show a message instead of failing.
 - Superusers are redirected from `/` and after login to `/admin/`.
 - Route `name` is optional in the form: blank means "first - last stop" (max 45 chars).

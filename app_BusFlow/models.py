@@ -179,6 +179,8 @@ class Ticket(models.Model):
         max_length=45, choices=Status.choices, default=Status.FREE
     )
     trip = models.ForeignKey(Trip, models.CASCADE, related_name="tickets")
+    passenger_name = models.CharField(max_length=45, blank=True)
+    passenger_phone = models.CharField(max_length=45, blank=True)
 
     class Meta:
         db_table = "ticket"
@@ -190,7 +192,8 @@ class Ticket(models.Model):
         ]
 
     def __str__(self):
-        return f"Квиток #{self.pk} ({self.status})"
+        who = f", {self.passenger_name}" if self.passenger_name else ""
+        return f"Квиток #{self.pk} ({self.status}{who})"
 
 
 class Client(models.Model):

@@ -192,3 +192,8 @@ def route_formset_class(extra=0):
         extra=extra,
         can_delete=True,
     )
+
+
+class TicketSellForm(forms.Form):
+    passenger_name = forms.CharField(max_length=45, label="Ім'я пасажира")
+    passenger_phone = forms.CharField(max_length=45, label="Телефон пасажира")

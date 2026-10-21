@@ -25,13 +25,14 @@ from app_BusFlow.forms import (
     OrderPlanForm,
     RouteForm,
     StopForm,
+    TicketSellForm,
     TripForm,
     VehicleForm,
     route_formset_class,
 )
 from app_BusFlow.mixins import ClientRequiredMixin, ManagerRequiredMixin, TitleMixin
-from app_BusFlow.models import Order, Route, Stop, StopOnRoute, Trip, Vehicle
-from app_BusFlow.services import refresh_trip_statuses
+from app_BusFlow.models import Order, Route, Stop, StopOnRoute, Ticket, Trip, Vehicle
+from app_BusFlow.services import refresh_trip_statuses, return_ticket, sell_ticket
 
 # ==================================== Вхід і дашборд ====================================
 
@@ -259,6 +260,14 @@ class TripsListView(LoginRequiredMixin, ListView):
         queryset = (
             Trip.objects.select_related("route", "vehicle")
             .prefetch_related("route__stoponroute_set__stop")
+            .annotate(
+                tickets_total=Count("tickets", distinct=True),
+                tickets_sold=Count(
+                    "tickets",
+                    filter=Q(tickets__status=Ticket.Status.SOLD),
+                    distinct=True,
+                ),
+            )
             .order_by(F("departure_time").asc(nulls_last=True))
         )
         text = params.get("q", "").strip()
@@ -330,6 +339,13 @@ class TripDetailView(LoginRequiredMixin, DetailView):
         context["tickets_total"] = sum(counts.values())
         context["tickets_free"] = counts.get("Вільний", 0)
         context["tickets_sold"] = counts.get("Продано", 0)
+        if roles(self.request)["is_manager"]:
+            context["sold_tickets"] = self.object.tickets.filter(
+                status=Ticket.Status.SOLD
+            ).order_by("pk")
+        context["can_sell"] = (
+            self.object.status == Trip.Status.SCHEDULED and context["tickets_free"] > 0
+        )
         return context
 
 
@@ -353,6 +369,66 @@ class TripDeleteView(SafeDeleteMixin, ManagerRequiredMixin, TitleMixin, DeleteVi
     title = "Видалення рейсу"
     template_name = "app_BusFlow/confirm_delete.html"
     success_url = reverse_lazy("trips")
+
+    def form_valid(self, form):
+        if self.object.tickets.filter(status=Ticket.Status.SOLD).exists():
+            messages.error(
+                self.request,
+                "Рейс не можна видалити: є продані квитки. "
+                "Спершу поверніть їх або скасуйте рейс.",
+            )
+            return redirect("trip_detail", pk=self.object.pk)
+        return super().form_valid(form)
+
+
+class TicketSellView(ManagerRequiredMixin, View):
+    template_name = "app_BusFlow/ticket_sell.html"
+
+    def get_trip(self, pk):
+        return get_object_or_404(Trip.objects.select_related("route"), pk=pk)
+
+    def get(self, request, pk):
+        context = {"trip": self.get_trip(pk), "form": TicketSellForm()}
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        trip = self.get_trip(pk)
+        form = TicketSellForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"trip": trip, "form": form})
+        with transaction.atomic():
+            ticket = sell_ticket(trip, **form.cleaned_data)
+        if ticket:
+            messages.success(
+                request, f"Квиток #{ticket.pk} продано: {ticket.passenger_name}."
+            )
+        else:
+            messages.error(
+                request,
+                "Продаж неможливий: рейс не «Заплановано» або вільних квитків немає.",
+            )
+        return redirect("trip_detail", pk=trip.pk)
+
+
+class TicketReturnView(ManagerRequiredMixin, View):
+    template_name = "app_BusFlow/ticket_return.html"
+
+    def get_ticket(self, pk):
+        return get_object_or_404(Ticket.objects.select_related("trip__route"), pk=pk)
+
+    def get(self, request, pk):
+        return render(request, self.template_name, {"ticket": self.get_ticket(pk)})
+
+    def post(self, request, pk):
+        ticket = self.get_ticket(pk)
+        if return_ticket(ticket):
+            messages.success(request, f"Квиток #{ticket.pk} повернуто в продаж.")
+        else:
+            messages.error(
+                request,
+                "Повернути можна лише проданий квиток рейсу «Заплановано».",
+            )
+        return redirect("trip_detail", pk=ticket.trip_id)
 
 
 # ==================================== Зупинки ====================================

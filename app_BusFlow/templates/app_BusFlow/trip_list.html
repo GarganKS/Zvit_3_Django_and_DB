@@ -42,6 +42,7 @@
             <th>Статус</th>
             <th>Ціна</th>
             <th>Транспорт</th>
+            <th>Квитки</th>
             {% if is_manager %}<th></th>{% endif %}
         </tr>
     </thead>
@@ -55,6 +56,7 @@
             <td>{% include "_status.html" with status=trip.status %}</td>
             <td>{{ trip.price }}₴</td>
             <td>{% if is_manager %}<a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a>{% else %}{{ trip.vehicle.name|default:"-" }}{% endif %}</td>
+            <td>{{ trip.tickets_sold }}/{{ trip.tickets_total }}</td>
             {% if is_manager %}
             <td class="actions">
                 <div class="cluster">
@@ -66,7 +68,7 @@
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8" class="empty">
+            <td colspan="9" class="empty">
                 {% if filtered %}За вашим запитом рейсів не знайдено. <a href="{% url 'trips' %}">Скинути фільтри</a>
                 {% else %}Рейсів ще немає.{% if is_manager %} <a href="{% url 'trip_new' %}">Додати перший рейс</a>{% endif %}{% endif %}
             </td>
