@@ -3,116 +3,142 @@
 {% block content %}
 {% if is_manager %}
 <div class="page-head">
-    <h2>Огляд</h2>
+    <div>
+        <h1>Огляд</h1>
+        <p class="page-sub">Що потребує уваги сьогодні.</p>
+    </div>
+    <div class="cluster">
+        <a href="{% url 'trip_new' %}" class="btn"><i data-lucide="plus"></i>Додати рейс</a>
+    </div>
 </div>
 
 <div class="stats">
     <a href="{% url 'orders' %}?status=Нова" class="stat{% if new_orders_count %} is-alert{% endif %}">
-        <span class="stat-value">{{ new_orders_count }}</span>
-        <span class="stat-label">Нові замовлення{% if new_orders_count %} - потребують дії{% endif %}</span>
+        <span class="stat-icon"><i data-lucide="inbox"></i></span>
+        <span><span class="stat-value">{{ new_orders_count }}</span><span class="stat-label">Нові замовлення{% if new_orders_count %}: потребують дії{% endif %}</span></span>
     </a>
     <a href="{% url 'orders' %}?status={{ 'Очікує підтвердження'|urlencode }}" class="stat">
-        <span class="stat-value">{{ awaiting_count }}</span>
-        <span class="stat-label">Очікують підтвердження клієнта</span>
+        <span class="stat-icon"><i data-lucide="hourglass"></i></span>
+        <span><span class="stat-value">{{ awaiting_count }}</span><span class="stat-label">Чекають підтвердження клієнта</span></span>
     </a>
     <a href="{% url 'trips' %}?period=today" class="stat">
-        <span class="stat-value">{{ trips_today_count }}</span>
-        <span class="stat-label">Рейси сьогодні</span>
+        <span class="stat-icon"><i data-lucide="calendar-clock"></i></span>
+        <span><span class="stat-value">{{ trips_today_count }}</span><span class="stat-label">Рейси сьогодні</span></span>
     </a>
     <a href="{% url 'trips' %}?status={{ 'В дорозі'|urlencode }}" class="stat">
-        <span class="stat-value">{{ trips_in_progress_count }}</span>
-        <span class="stat-label">Рейси в дорозі</span>
+        <span class="stat-icon"><i data-lucide="navigation"></i></span>
+        <span><span class="stat-value">{{ trips_in_progress_count }}</span><span class="stat-label">Рейси в дорозі</span></span>
     </a>
     <a href="{% url 'vehicles' %}?status={{ 'Очікує'|urlencode }}" class="stat">
-        <span class="stat-value">{{ free_vehicles_count }}</span>
-        <span class="stat-label">Вільні автобуси</span>
+        <span class="stat-icon"><i data-lucide="bus"></i></span>
+        <span><span class="stat-value">{{ free_vehicles_count }}</span><span class="stat-label">Вільні автобуси</span></span>
     </a>
 </div>
 
-<section class="section">
-    <div class="section-head">
-        <h3>Нові замовлення</h3>
-        <a href="{% url 'orders' %}?status=Нова">Усі нові</a>
-    </div>
-    {% if new_orders %}
-    <div class="tile-grid">
-        {% for order in new_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=True %}{% endfor %}
-    </div>
-    {% else %}
-    <p class="muted">Нових замовлень немає.</p>
-    {% endif %}
-</section>
+<div class="dash-grid">
+    <section class="panel">
+        <header class="panel-head">
+            <h2><i data-lucide="inbox"></i>Нові замовлення</h2>
+            <a class="link" href="{% url 'orders' %}?status=Нова">Усі нові</a>
+        </header>
+        {% if new_orders %}
+        <div class="tile-list">{% for order in new_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=True %}{% endfor %}</div>
+        {% else %}
+        <p class="panel-empty">Нових замовлень немає. Усе опрацьовано.</p>
+        {% endif %}
+    </section>
 
-<section class="section">
-    <div class="section-head">
-        <h3>Очікують підтвердження клієнта</h3>
-        <a href="{% url 'orders' %}?status={{ 'Очікує підтвердження'|urlencode }}">Усі</a>
-    </div>
-    {% if awaiting_orders %}
-    <div class="tile-grid">
-        {% for order in awaiting_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=True %}{% endfor %}
-    </div>
-    {% else %}
-    <p class="muted">Немає замовлень, що чекають на клієнта.</p>
-    {% endif %}
-</section>
+    <section class="panel">
+        <header class="panel-head">
+            <h2><i data-lucide="hourglass"></i>Чекають підтвердження клієнта</h2>
+            <a class="link" href="{% url 'orders' %}?status={{ 'Очікує підтвердження'|urlencode }}">Усі</a>
+        </header>
+        {% if awaiting_orders %}
+        <div class="tile-list">{% for order in awaiting_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=True %}{% endfor %}</div>
+        {% else %}
+        <p class="panel-empty">Немає замовлень, що чекають на клієнта.</p>
+        {% endif %}
+    </section>
 
-<section class="section">
-    <div class="section-head">
-        <h3>Найближчі рейси</h3>
-        <a href="{% url 'trips' %}?period=upcoming">Усі майбутні</a>
-    </div>
-    {% if upcoming_trips %}
-    <div class="tile-grid">
-        {% for trip in upcoming_trips %}{% include "app_BusFlow/_trip_tile.html" %}{% endfor %}
-    </div>
-    {% else %}
-    <p class="muted">Запланованих рейсів немає. <a href="{% url 'trip_new' %}">Додати рейс</a></p>
-    {% endif %}
-</section>
+    <section class="panel span-2">
+        <header class="panel-head">
+            <h2><i data-lucide="calendar-clock"></i>Найближчі рейси</h2>
+            <a class="link" href="{% url 'trips' %}?period=upcoming">Усі майбутні</a>
+        </header>
+        {% if upcoming_trips %}
+        <div class="panel-body"><div class="tile-grid">{% for trip in upcoming_trips %}{% include "app_BusFlow/_trip_tile.html" %}{% endfor %}</div></div>
+        {% else %}
+        <p class="panel-empty">Запланованих рейсів немає. <a href="{% url 'trip_new' %}">Додати рейс</a></p>
+        {% endif %}
+    </section>
+</div>
 
 {% elif is_client %}
 <div class="page-head">
-    <h2>Головна</h2>
-    <a href="{% url 'order_new' %}" class="btn">Замовити автобус</a>
+    <div>
+        <h1>Головна</h1>
+        <p class="page-sub">Ваші замовлення та поїздки.</p>
+    </div>
+    <a href="{% url 'order_new' %}" class="btn"><i data-lucide="plus"></i>Замовити автобус</a>
 </div>
 
 {% if confirm_orders %}
-<section class="section">
-    <div class="section-head">
-        <h3>Потребують вашого підтвердження</h3>
-    </div>
-    <p class="muted">Менеджер опрацював заявку й запропонував автобус та ціну. Підтвердіть замовлення або відмовтеся.</p>
-    <div class="tile-grid">
-        {% for order in confirm_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=False %}{% endfor %}
+<section class="panel" style="border-color: var(--accent-line);">
+    <header class="panel-head" style="background: var(--accent-soft); border-radius: var(--r-lg) var(--r-lg) 0 0;">
+        <h2><i data-lucide="bell-ring"></i>Потрібне ваше підтвердження</h2>
+    </header>
+    <div class="panel-body">
+        <p class="muted">Менеджер опрацював заявку й запропонував автобус та ціну. Підтвердіть замовлення або відмовтеся.</p>
+        <div class="tile-grid">{% for order in confirm_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=False %}{% endfor %}</div>
     </div>
 </section>
 {% endif %}
 
-<section class="section">
-    <div class="section-head">
-        <h3>Мої замовлення</h3>
-        {% if my_orders %}<a href="{% url 'orders' %}">Усі замовлення</a>{% endif %}
-    </div>
+<section class="panel">
+    <header class="panel-head">
+        <h2><i data-lucide="clipboard-list"></i>Мої замовлення</h2>
+        {% if my_orders %}<a class="link" href="{% url 'orders' %}">Усі замовлення</a>{% endif %}
+    </header>
     {% if my_orders %}
-    <div class="tile-grid">
-        {% for order in my_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=False %}{% endfor %}
-    </div>
+    <div class="panel-body"><div class="tile-grid">{% for order in my_orders %}{% include "app_BusFlow/_order_tile.html" with for_manager=False %}{% endfor %}</div></div>
     {% elif not confirm_orders %}
-    <p class="muted">Ви ще не робили замовлень. Натисніть «Замовити автобус», щоб надіслати першу заявку.</p>
+    <div class="empty-state">
+        <span class="empty-icon"><i data-lucide="bus"></i></span>
+        <strong>Замовлень ще немає</strong>
+        <span>Надішліть першу заявку, і менеджер запропонує автобус та ціну.</span>
+        <a href="{% url 'order_new' %}" class="btn btn-small" style="margin-top:8px">Замовити автобус</a>
+    </div>
     {% endif %}
 </section>
 
 {% elif user.is_authenticated %}
-<h2>Головна</h2>
-<p class="muted">Для вашого акаунта поки немає доступних розділів. Зверніться до адміністратора.</p>
+<div class="page-head"><h1>Головна</h1></div>
+<div class="panel"><div class="empty-state">
+    <span class="empty-icon"><i data-lucide="lock"></i></span>
+    <strong>Розділи ще недоступні</strong>
+    <span>Для вашого акаунта поки немає доступних розділів. Зверніться до адміністратора.</span>
+</div></div>
 
 {% else %}
-<h2>Вітаємо в BusFlow</h2>
-<p class="muted">Увійдіть, щоб переглядати рейси та замовляти автобус.</p>
-<div class="home-links">
-    <a href="{% url 'login' %}" class="primary">Увійти</a>
-    <a href="{% url 'register' %}">Реєстрація</a>
-</div>
+<section class="hero">
+    <div>
+        <h1>Автобусні рейси без зайвого клопоту</h1>
+        <p>Увійдіть, щоб переглядати рейси та замовляти автобус для групи, команди чи події.</p>
+        <div class="cluster">
+            <a href="{% url 'login' %}" class="btn"><i data-lucide="log-in"></i>Увійти</a>
+            <a href="{% url 'register' %}" class="btn btn-secondary">Зареєструватися</a>
+        </div>
+    </div>
+    <div class="hero-art">
+        <svg viewBox="0 0 420 240" fill="none" aria-hidden="true">
+            <path d="M24 200 C110 200 100 80 200 80 S320 180 372 110 S400 40 400 40" stroke="#fff" stroke-opacity=".12" stroke-width="16" stroke-linecap="round"/>
+            <path d="M24 200 C110 200 100 80 200 80 S320 180 372 110 S400 40 400 40" stroke="#2f6bff" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+            <circle cx="24" cy="200" r="11" fill="#1f9d55" stroke="#fff" stroke-width="3"/>
+            <circle cx="200" cy="80" r="9" fill="#0e1e33" stroke="#fff" stroke-width="3"/>
+            <circle cx="372" cy="110" r="9" fill="#0e1e33" stroke="#fff" stroke-width="3"/>
+            <circle cx="400" cy="40" r="11" fill="#f5b301" stroke="#fff" stroke-width="3"/>
+        </svg>
+    </div>
+</section>
 {% endif %}
 {% endblock %}

@@ -3,28 +3,32 @@
 {% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
-    <h2>{{ title }}</h2>
+    <div>
+        <a href="{% url 'stops' %}" class="back"><i data-lucide="arrow-left"></i>Усі зупинки</a>
+        <h1>{{ title }}</h1>
+    </div>
 </div>
 
-<div class="stop-form">
-    <form method="post" class="stop-form-fields">
+<div class="split split-wide">
+    <form method="post" class="panel">
         {% csrf_token %}
-        <div class="form-grid">{{ form.as_div }}</div>
-        <div class="form-actions">
-            <button type="submit">Зберегти</button>
-            <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Назад</a>
+        <div class="panel-body">
+            <div class="form-grid">{{ form.as_div }}</div>
+            <div class="form-actions">
+                <button type="submit" class="btn"><i data-lucide="check"></i>Зберегти</button>
+                <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-ghost">Скасувати</a>
+            </div>
         </div>
     </form>
 
-    <section class="section stop-form-map">
-        <div class="section-head"><h3>Позначити на карті</h3></div>
-        <p class="muted">
-            Клацніть по карті - і координати зупинки підставляться у форму.
-            Маркер можна перетягнути, а координати - вписати вручну.
+    <section class="panel">
+        <header class="panel-head"><h2><i data-lucide="locate-fixed"></i>Позначити на карті</h2></header>
+        <p class="muted" style="padding: 12px 18px 12px; margin:0">
+            Клацніть по карті, і координати підставляться у форму. Маркер можна перетягнути, а координати вписати вручну.
         </p>
-        <div class="map-canvas map-picker" id="stop-picker"></div>
+        <div class="map-canvas map-picker" id="stop-picker" style="border-radius:0"></div>
         <div class="cluster map-actions">
-            <button type="button" class="btn btn-secondary" id="stop-picker-reset">Скинути точку</button>
+            <button type="button" class="btn btn-secondary btn-small" id="stop-picker-reset"><i data-lucide="rotate-ccw"></i>Скинути точку</button>
         </div>
     </section>
 </div>

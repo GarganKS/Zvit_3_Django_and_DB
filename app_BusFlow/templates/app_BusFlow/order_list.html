@@ -3,17 +3,20 @@
 {% block title %}{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %} - BusFlow{% endblock %}
 {% block content %}
 <div class="page-head">
-    <h2>{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %}</h2>
-    {% if not is_manager %}<a href="{% url 'order_new' %}" class="btn">Замовити автобус</a>{% endif %}
+    <div>
+        <h1>{% if is_manager %}Замовлення клієнтів{% else %}Мої замовлення{% endif %}</h1>
+        <p class="page-sub">{% if is_manager %}Опрацьовуйте заявки та стежте за підтвердженнями.{% else %}Статус кожної заявки та пропозиції менеджера.{% endif %}</p>
+    </div>
+    {% if not is_manager %}<a href="{% url 'order_new' %}" class="btn"><i data-lucide="plus"></i>Замовити автобус</a>{% endif %}
 </div>
 {% if is_manager %}
 {% if client_filter or vehicle_filter %}
 <div class="chips">
-    {% if client_filter %}<span class="chip">Клієнт: {{ client_filter.client.name|default:client_filter.username }} <a href="{% remove_param 'client' %}" aria-label="Скинути фільтр">&times;</a></span>{% endif %}
-    {% if vehicle_filter %}<span class="chip">Автобус: {{ vehicle_filter }} <a href="{% remove_param 'vehicle' %}" aria-label="Скинути фільтр">&times;</a></span>{% endif %}
+    {% if client_filter %}<span class="chip chip-filter">Клієнт: {{ client_filter.client.name|default:client_filter.username }} <a href="{% remove_param 'client' %}" aria-label="Скинути фільтр"><i data-lucide="x"></i></a></span>{% endif %}
+    {% if vehicle_filter %}<span class="chip chip-filter">Автобус: {{ vehicle_filter }} <a href="{% remove_param 'vehicle' %}" aria-label="Скинути фільтр"><i data-lucide="x"></i></a></span>{% endif %}
 </div>
 {% endif %}
-<div class="status-filter">
+<div class="seg" role="group" aria-label="Фільтр за статусом">
     <a href="{% remove_param 'status' %}" {% if not current_status %}class="active"{% endif %}>Усі</a>
     {% for value, label in statuses %}
     <a href="?status={{ value|urlencode }}{% if client_filter %}&client={{ client_filter.pk }}{% endif %}{% if vehicle_filter %}&vehicle={{ vehicle_filter.pk }}{% endif %}" {% if current_status == value %}class="active"{% endif %}>{{ label }}</a>
@@ -21,17 +24,21 @@
 </div>
 {% endif %}
 {% if orders %}
-<div class="table-wrap">
-<table>
+<div class="toolbar">
+    <label class="search grow"><i data-lucide="search"></i><input type="search" data-table-filter="orders-table" placeholder="Швидкий пошук: клієнт, напрямок, автобус" aria-label="Швидкий пошук" /></label>
+    <span class="count" data-table-count="orders-table"></span>
+</div>
+<div class="panel panel-flush"><div class="table-wrap">
+<table class="data-table stack-table" id="orders-table">
     <thead>
         <tr>
-            {% if is_manager %}<th>Клієнт</th>{% endif %}
-            <th>Напрямок</th>
-            <th>Пасажирів</th>
-            <th>Відправлення</th>
-            <th>Статус</th>
-            <th>Автобус</th>
-            <th>Ціна</th>
+            {% if is_manager %}<th data-sort="text">Клієнт</th>{% endif %}
+            <th data-sort="text">Напрямок</th>
+            <th data-sort="num">Пасажирів</th>
+            <th data-sort="text">Відправлення</th>
+            <th data-sort="text">Статус</th>
+            <th data-sort="text">Автобус</th>
+            <th data-sort="num">Ціна</th>
             <th></th>
         </tr>
     </thead>
@@ -39,39 +46,39 @@
         {% for order in orders %}
         <tr{% if is_manager and order.status == order.Status.NEW %} class="highlight"{% endif %}>
             {% if is_manager %}
-            <td>
+            <td data-label="Клієнт">
                 <a href="{% url 'orders' %}?client={{ order.client_id }}">{{ order.client.client.name|default:order.client.username }}</a>
                 <br /><span class="muted">{{ order.client.username }}</span>
             </td>
             {% endif %}
-            <td><a href="{% url 'order_detail' order.pk %}">{{ order.destination }}</a></td>
-            <td>{{ order.passengers }}</td>
-            <td>{{ order.departure_time|date:"d.m.Y H:i" }}</td>
-            <td>{% include "_status.html" with status=order.status %}</td>
-            <td>
+            <td data-label="Напрямок" class="cell-main"><a href="{% url 'order_detail' order.pk %}">{{ order.destination }}</a></td>
+            <td data-label="Пасажирів">{{ order.passengers }}</td>
+            <td data-label="Відправлення" data-sort-value="{{ order.departure_time|date:'c' }}">{{ order.departure_time|date:"d.m.Y H:i" }}</td>
+            <td data-label="Статус">{% include "_status.html" with status=order.status %}</td>
+            <td data-label="Автобус">
                 {% if order.vehicle %}
                     {% if is_manager %}<a href="{% url 'vehicle_detail' order.vehicle_id %}">{{ order.vehicle }}</a>{% else %}{{ order.vehicle.name }}{% endif %}
                 {% else %}-{% endif %}
             </td>
-            <td>{% if order.total_price %}{{ order.total_price }} грн.{% else %}-{% endif %}</td>
+            <td data-label="Ціна"{% if order.total_price %} data-sort-value="{{ order.total_price|floatformat:'2u' }}"{% endif %}>{% if order.total_price %}{{ order.total_price }} грн{% else %}-{% endif %}</td>
             <td class="actions">
                 <div class="cluster">
                 {% if is_manager %}
                     {% if order.status == order.Status.NEW %}
                     <a href="{% url 'order_plan' order.pk %}" class="btn btn-small">Опрацювати</a>
-                    <a href="{% url 'order_reject' order.pk %}" class="danger">Відхилити</a>
+                    <a href="{% url 'order_reject' order.pk %}" class="btn btn-small btn-danger-ghost">Відхилити</a>
                     {% elif order.status == order.Status.AWAITING %}
                     <span class="muted">Чекаємо клієнта</span>
-                    <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+                    <a href="{% url 'order_cancel' order.pk %}" class="btn btn-small btn-danger-ghost">Скасувати</a>
                     {% elif order.status == order.Status.PLANNED %}
-                    <a href="{% url 'order_complete' order.pk %}">Завершити</a>
-                    <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+                    <a href="{% url 'order_complete' order.pk %}" class="btn btn-small btn-secondary">Завершити</a>
+                    <a href="{% url 'order_cancel' order.pk %}" class="btn btn-small btn-danger-ghost">Скасувати</a>
                     {% endif %}
                 {% elif order.status == order.Status.AWAITING %}
                 <a href="{% url 'order_confirm' order.pk %}" class="btn btn-small">Підтвердити</a>
-                <a href="{% url 'order_decline' order.pk %}" class="danger">Відмовитися</a>
+                <a href="{% url 'order_decline' order.pk %}" class="btn btn-small btn-danger-ghost">Відмовитися</a>
                 {% elif order.status == order.Status.NEW %}
-                <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+                <a href="{% url 'order_cancel' order.pk %}" class="btn btn-small btn-danger-ghost">Скасувати</a>
                 {% endif %}
                 </div>
             </td>
@@ -79,10 +86,12 @@
         {% endfor %}
     </tbody>
 </table>
-</div>
-{% elif is_manager %}
-<p class="muted">Замовлень за обраними умовами немає.</p>
+</div></div>
 {% else %}
-<p class="muted">Ви ще не робили замовлень.</p>
+<div class="panel"><div class="empty-state">
+    <span class="empty-icon"><i data-lucide="clipboard-list"></i></span>
+    {% if is_manager %}<strong>Замовлень немає</strong><span>За обраними умовами замовлень не знайдено.</span>
+    {% else %}<strong>Замовлень ще немає</strong><span>Надішліть першу заявку на автобус.</span><a href="{% url 'order_new' %}" class="btn btn-small" style="margin-top:8px">Замовити автобус</a>{% endif %}
+</div></div>
 {% endif %}
 {% endblock %}

@@ -40,24 +40,28 @@
         if (points.length < 2) return;
         // Біла «підкладка» під лінією - так маршрут краще видно на карті.
         L.polyline(points, { color: "#ffffff", weight: 9, opacity: 0.85 }).addTo(map);
-        L.polyline(points, { color: "#1f4e8c", weight: 4, opacity: 0.95 }).addTo(map);
+        L.polyline(points, { color: "#2f6bff", weight: 5, opacity: 0.95 }).addTo(map);
         points.forEach(function (point) {
             bounds.push(point);
         });
     });
 
-    stops.forEach(function (stop) {
+    stops.forEach(function (stop, index) {
         var icon = L.divIcon({
-            className: "map-marker" + (stop.main ? " is-main" : ""),
+            className:
+                "map-marker" +
+                (stop.main ? " is-main" : "") +
+                (stops.length > 1 && index === 0 ? " is-start" : "") +
+                (stops.length > 1 && index === stops.length - 1 ? " is-end" : ""),
             html: '<span class="map-marker-num">' + escapeHtml(stop.seq || "") + "</span>",
-            iconSize: [26, 26],
-            iconAnchor: [13, 13],
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
         });
         var marker = L.marker([stop.lat, stop.lon], { icon: icon, title: stop.name });
         marker.addTo(map);
         var html = "<strong>" + escapeHtml(stop.name) + "</strong>";
         if (stop.address) html += "<br>" + escapeHtml(stop.address);
-        if (stop.url) html += '<br><a href="' + stop.url + '">Сторінка зупинки</a>';
+        if (stop.url) html += '<br><a href="' + stop.url + '">Відкрити зупинку</a>';
         marker.bindPopup(html);
         bounds.push([stop.lat, stop.lon]);
     });

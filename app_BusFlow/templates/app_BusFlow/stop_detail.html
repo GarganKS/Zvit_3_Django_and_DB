@@ -3,28 +3,39 @@
 {% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
-    <h2>{{ stop.name }}</h2>
+    <div>
+        <a href="{% url 'stops' %}" class="back"><i data-lucide="arrow-left"></i>Усі зупинки</a>
+        <h1>{{ stop.name }}</h1>
+    </div>
     <div class="cluster">
-        <a href="{% url 'stop_edit' stop.pk %}" class="btn btn-secondary">Редагувати</a>
-        <a href="{% url 'stops' %}">Усі зупинки</a>
+        <a href="{% url 'stop_edit' stop.pk %}" class="btn btn-secondary"><i data-lucide="pencil"></i>Редагувати</a>
     </div>
 </div>
-<div class="card">
-    <dl>
-        <dt>Адреса</dt><dd>{{ stop.address }}</dd>
-        <dt>Координати</dt><dd>{{ stop.latitude }}, {{ stop.longitude }}</dd>
-    </dl>
+<div class="detail-grid">
+    <section class="panel">
+        <header class="panel-head"><h2><i data-lucide="map"></i>Карта</h2></header>
+        {% include "app_BusFlow/_map.html" with map_data=stop_map %}
+    </section>
+    <aside class="detail-side">
+        <section class="panel">
+            <header class="panel-head"><h2>Дані зупинки</h2></header>
+            <div class="panel-body">
+                <dl class="kv">
+                    <div class="kv-row"><dt>Адреса</dt><dd>{{ stop.address }}</dd></div>
+                    <div class="kv-row"><dt>Координати</dt><dd class="num">{{ stop.latitude }}, {{ stop.longitude }}</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="panel">
+            <header class="panel-head"><h2><i data-lucide="route"></i>Маршрути через зупинку</h2></header>
+            <div class="panel-body">
+                <div class="cluster">
+                    {% for route in routes %}<a href="{% url 'route_detail' route.pk %}" class="chip">{{ route.display_name }}</a>
+                    {% empty %}<p class="muted" style="margin:0">Зупинка ще не входить до жодного маршруту.</p>{% endfor %}
+                </div>
+            </div>
+        </section>
+    </aside>
 </div>
-<section class="section">
-    <div class="section-head"><h3>Карта</h3></div>
-    {% include "app_BusFlow/_map.html" with map_data=stop_map %}
-</section>
-<section class="section">
-    <div class="section-head"><h3>Маршрути через цю зупинку</h3></div>
-    <div class="cluster">
-        {% for route in routes %}<a href="{% url 'route_detail' route.pk %}" class="chip">{{ route.display_name }}</a>
-        {% empty %}<p class="muted">Зупинка ще не входить до жодного маршруту.</p>{% endfor %}
-    </div>
-</section>
 {% endblock %}
 {% block scripts %}{% include "app_BusFlow/_leaflet_scripts.html" %}{% endblock %}

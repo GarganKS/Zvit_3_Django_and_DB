@@ -13,9 +13,9 @@
         {{ form.non_field_errors }}
     </div>
     <div class="stop-controls">
-        <button type="button" class="icon-btn" data-action="up" title="Підняти вище" aria-label="Підняти вище">&uarr;</button>
-        <button type="button" class="icon-btn" data-action="down" title="Опустити нижче" aria-label="Опустити нижче">&darr;</button>
-        <button type="button" class="link-button danger" data-action="delete">Видалити</button>
+        <button type="button" class="icon-btn bordered" data-action="up" title="Підняти вище" aria-label="Підняти вище"><i data-lucide="arrow-up"></i></button>
+        <button type="button" class="icon-btn bordered" data-action="down" title="Опустити нижче" aria-label="Опустити нижче"><i data-lucide="arrow-down"></i></button>
+        <button type="button" class="icon-btn danger" data-action="delete" title="Видалити зупинку" aria-label="Видалити зупинку"><i data-lucide="trash-2"></i></button>
     </div>
     {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
     <span hidden>{{ form.DELETE }}</span>

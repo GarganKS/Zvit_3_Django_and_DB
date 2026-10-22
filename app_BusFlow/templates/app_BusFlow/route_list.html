@@ -2,62 +2,63 @@
 {% block title %}Маршрути - BusFlow{% endblock %}
 {% block content %}
 <div class="page-head">
-    <h2>Маршрути</h2>
-    <a href="{% url 'route_new' %}" class="btn">Додати маршрут</a>
+    <div>
+        <h1>Маршрути</h1>
+        <p class="page-sub">Послідовності зупинок, автобуси та рейси на кожному маршруті.</p>
+    </div>
+    <a href="{% url 'route_new' %}" class="btn"><i data-lucide="plus"></i>Додати маршрут</a>
 </div>
 {% if stop_filter %}
-<div class="chips"><span class="chip">Зупинка: {{ stop_filter.name }} <a href="{% url 'routes' %}" aria-label="Скинути фільтр">&times;</a></span></div>
+<div class="chips"><span class="chip chip-filter">Зупинка: {{ stop_filter.name }} <a href="{% url 'routes' %}" aria-label="Скинути фільтр"><i data-lucide="x"></i></a></span></div>
 {% endif %}
-<div class="table-wrap">
-<table>
+<div class="toolbar">
+    <label class="search grow"><i data-lucide="search"></i><input type="search" data-table-filter="routes-table" placeholder="Швидкий пошук: назва, зупинка, автобус" aria-label="Швидкий пошук" /></label>
+    <span class="count" data-table-count="routes-table"></span>
+</div>
+<div class="panel panel-flush"><div class="table-wrap">
+<table class="data-table stack-table" id="routes-table">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Назва</th>
+            <th data-sort="num">ID</th>
+            <th data-sort="text">Назва</th>
             <th>Зупинки</th>
             <th>Автобуси</th>
-            <th>Рейси</th>
+            <th data-sort="num">Рейси</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         {% for route in object_list %}
         <tr>
-            <td class="muted">{{ route.id }}</td>
-            <td><strong><a href="{% url 'route_detail' route.pk %}">{{ route.display_name }}</a></strong></td>
-            <td>
-                <ol class="stops">
+            <td data-label="ID" class="id">{{ route.id }}</td>
+            <td data-label="Назва" class="cell-main"><a href="{% url 'route_detail' route.pk %}">{{ route.display_name }}</a></td>
+            <td data-label="Зупинки">
+                <div class="stop-chain">
                     {% for stop_on_route in route.stoponroute_set.all %}
-                    <li>
-                        <a href="{% url 'stop_detail' stop_on_route.stop_id %}">{{ stop_on_route.stop.name }}</a>
-                        <span class="stop-address">{{ stop_on_route.stop.address }}</span>
-                        {% if forloop.first %}<span class="stop-badge start">Початок</span>{% endif %}
-                        {% if forloop.last and not forloop.first %}<span class="stop-badge end">Кінець</span>{% endif %}
-                    </li>
+                    {% if not forloop.first %}<span class="sep"><i data-lucide="chevron-right"></i></span>{% endif %}
+                    <a href="{% url 'stop_detail' stop_on_route.stop_id %}" class="{% if forloop.first %}first{% elif forloop.last %}last{% endif %}" title="{{ stop_on_route.stop.address }}">{{ stop_on_route.stop.name }}</a>
                     {% empty %}-{% endfor %}
-                </ol>
+                </div>
             </td>
-            <td>
+            <td data-label="Автобуси">
                 <div class="stack">
                 {% for vehicle in route.used_vehicles %}
                     <a href="{% url 'vehicle_detail' vehicle.pk %}">{{ vehicle.name }}</a>
                 {% empty %}<span class="muted">-</span>{% endfor %}
                 </div>
             </td>
-            <td><a href="{% url 'trips' %}?route={{ route.pk }}">{{ route.trip_set.all|length }}</a></td>
+            <td data-label="Рейси"><a href="{% url 'trips' %}?route={{ route.pk }}">{{ route.trip_set.all|length }}</a></td>
             <td class="actions">
                 <div class="cluster">
-                    <a href="{% url 'route_edit' route.pk %}">Редагувати</a>
-                    <a href="{% url 'route_delete' route.pk %}" class="danger">Видалити</a>
+                    <a href="{% url 'route_edit' route.pk %}" class="icon-btn" title="Редагувати" aria-label="Редагувати"><i data-lucide="pencil"></i></a>
+                    <a href="{% url 'route_delete' route.pk %}" class="icon-btn danger" title="Видалити" aria-label="Видалити"><i data-lucide="trash-2"></i></a>
                 </div>
             </td>
         </tr>
         {% empty %}
-        <tr>
-            <td colspan="6" class="empty">Маршрутів ще немає.</td>
-        </tr>
+        <tr class="empty-row"><td colspan="6" class="empty">Маршрутів ще немає. <a href="{% url 'route_new' %}">Додати перший маршрут</a></td></tr>
         {% endfor %}
     </tbody>
 </table>
-</div>
+</div></div>
 {% endblock %}

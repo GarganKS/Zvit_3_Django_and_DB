@@ -76,6 +76,7 @@
         var row = holder.firstElementChild;
         list.appendChild(row);
         total.value = index + 1;
+        if (window.busflowIcons) window.busflowIcons();
         refresh();
         field(row, "stop").focus();
     }
