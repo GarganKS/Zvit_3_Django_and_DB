@@ -1,0 +1,12 @@
+{# Картка рейсу. Параметр: trip #}
+<article class="tile">
+    <header class="tile-head">
+        <a class="tile-title" href="{% url 'trip_detail' trip.pk %}">{{ trip.route.display_name }}</a>
+        {% include "_status.html" with status=trip.status %}
+    </header>
+    <dl class="tile-meta">
+        <dt>Відправлення</dt><dd>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</dd>
+        <dt>Автобус</dt><dd><a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a></dd>
+        <dt>Ціна</dt><dd>{{ trip.price }} грн</dd>
+    </dl>
+</article>

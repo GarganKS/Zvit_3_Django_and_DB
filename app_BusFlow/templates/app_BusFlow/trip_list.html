@@ -1,45 +1,93 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load busflow_extras %}
 {% block title %}Рейси - BusFlow{% endblock %}
 {% block content %}
-<h2>Рейси</h2>
-{% if is_manager %}
-<p><a href="{% url 'trip_new' %}">Додати рейс</a></p>
+<div class="page-head">
+    <div>
+        <h1>Рейси</h1>
+        <p class="page-sub">Розклад, заповненість і продаж квитків.</p>
+    </div>
+    {% if is_manager %}<a href="{% url 'trip_new' %}" class="btn"><i data-lucide="plus"></i>Додати рейс</a>{% endif %}
+</div>
+{% if route_filter or vehicle_filter %}
+<div class="chips">
+    {% if route_filter %}<span class="chip chip-filter">Маршрут: {{ route_filter.display_name }} <a href="{% remove_param 'route' %}" aria-label="Скинути фільтр"><i data-lucide="x"></i></a></span>{% endif %}
+    {% if vehicle_filter %}<span class="chip chip-filter">Автобус: {{ vehicle_filter }} <a href="{% remove_param 'vehicle' %}" aria-label="Скинути фільтр"><i data-lucide="x"></i></a></span>{% endif %}
+</div>
 {% endif %}
-<table>
+<form method="get" class="filters">
+    {% if route_filter %}<input type="hidden" name="route" value="{{ route_filter.pk }}" />{% endif %}
+    {% if vehicle_filter %}<input type="hidden" name="vehicle" value="{{ vehicle_filter.pk }}" />{% endif %}
+    <label class="search"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Пошук: зупинка або автобус" aria-label="Пошук" /></label>
+    <select name="status" aria-label="Статус">
+        <option value="">Усі статуси</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="period" aria-label="Період">
+        <option value="">Будь-який час</option>
+        {% for value, label in periods %}
+        <option value="{{ value }}" {% if current_period == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Знайти</button>
+    {% if filtered %}<a href="{% url 'trips' %}" class="btn btn-ghost"><i data-lucide="rotate-ccw"></i>Скинути</a>{% endif %}
+</form>
+<div class="toolbar"><span class="count" data-table-count="trips-table"></span></div>
+<div class="panel panel-flush"><div class="table-wrap">
+<table class="data-table stack-table" id="trips-table">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Маршрут</th>
-            <th>Відправлення</th>
-            <th>Прибуття</th>
-            <th>Статус</th>
-            <th>Ціна</th>
-            <th>Транспорт</th>
+            <th data-sort="num">ID</th>
+            <th data-sort="text">Маршрут</th>
+            <th data-sort="text">Відправлення</th>
+            <th data-sort="text">Прибуття</th>
+            <th data-sort="text">Статус</th>
+            <th data-sort="num">Ціна</th>
+            <th data-sort="text">Транспорт</th>
+            <th data-sort="num">Квитки</th>
             {% if is_manager %}<th></th>{% endif %}
         </tr>
     </thead>
     <tbody>
         {% for trip in object_list %}
-        <tr>
-            <td>{{ trip.id }}</td>
-            <td>{{ trip.route.display_name }}</td>
-            <td>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</td>
-            <td>{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</td>
-            <td>{{ trip.status }}</td>
-            <td>{{ trip.price }}₴</td>
-            <td>{{ trip.vehicle.name|default:"-" }}</td>
+        <tr data-trip-url="{% url 'trip_detail' trip.pk %}" tabindex="0">
+            <td data-label="ID" class="id"><a href="{% url 'trip_detail' trip.pk %}">{{ trip.id }}</a></td>
+            <td data-label="Маршрут" class="cell-main">{% if is_manager %}<a href="{% url 'route_detail' trip.route_id %}">{{ trip.route.display_name }}</a>{% else %}<a href="{% url 'trip_detail' trip.pk %}">{{ trip.route.display_name }}</a>{% endif %}</td>
+            <td data-label="Відправлення"{% if trip.departure_time %} data-sort-value="{{ trip.departure_time|date:'c' }}"{% endif %}>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</td>
+            <td data-label="Прибуття"{% if trip.arrival_time %} data-sort-value="{{ trip.arrival_time|date:'c' }}"{% endif %}>{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</td>
+            <td data-label="Статус">{% include "_status.html" with status=trip.status %}</td>
+            <td data-label="Ціна" data-sort-value="{{ trip.price|floatformat:'2u' }}">{{ trip.price }}₴</td>
+            <td data-label="Транспорт">{% if is_manager %}<a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a>{% else %}{{ trip.vehicle.name|default:"-" }}{% endif %}</td>
+            <td data-label="Квитки" data-sort-value="{{ trip.tickets_sold }}">
+                <div class="seats"><span class="seats-text">{{ trip.tickets_sold }}/{{ trip.tickets_total }}</span><progress max="{{ trip.tickets_total|default:1 }}" value="{{ trip.tickets_sold }}" aria-hidden="true"></progress></div>
+            </td>
             {% if is_manager %}
-            <td>
-                <a href="{% url 'trip_edit' trip.pk %}">Редагувати</a>
-                <a href="{% url 'trip_delete' trip.pk %}">Видалити</a>
+            <td class="actions">
+                <div class="cluster">
+                    {% if trip.status == trip.Status.SCHEDULED and trip.tickets_free %}
+                    <a href="{% url 'ticket_sell' trip.pk %}" class="btn btn-small">Продати квиток</a>
+                    {% endif %}
+                    <a href="{% url 'trip_edit' trip.pk %}" class="icon-btn" title="Редагувати" aria-label="Редагувати"><i data-lucide="pencil"></i></a>
+                    <a href="{% url 'trip_delete' trip.pk %}" class="icon-btn danger" title="Видалити" aria-label="Видалити"><i data-lucide="trash-2"></i></a>
+                </div>
             </td>
             {% endif %}
         </tr>
         {% empty %}
-        <tr>
-            <td colspan="8">Рейсів ще немає.</td>
+        <tr class="empty-row">
+            <td colspan="9" class="empty">
+                {% if filtered %}За вашим запитом рейсів не знайдено. <a href="{% url 'trips' %}">Скинути фільтри</a>
+                {% else %}Рейсів ще немає.{% if is_manager %} <a href="{% url 'trip_new' %}">Додати перший рейс</a>{% endif %}{% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/trip_list.js' %}" defer></script>
 {% endblock %}

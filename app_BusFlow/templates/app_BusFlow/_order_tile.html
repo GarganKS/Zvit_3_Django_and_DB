@@ -1,0 +1,37 @@
+{# Картка замовлення. Параметри: order, for_manager (чи показувати менеджерські дії) #}
+<article class="tile{% if order.status == order.Status.NEW and for_manager %} is-alert{% endif %}">
+    <header class="tile-head">
+        <a class="tile-title" href="{% url 'order_detail' order.pk %}">{{ order.destination }}</a>
+        {% include "_status.html" with status=order.status %}
+    </header>
+    <dl class="tile-meta">
+        {% if for_manager %}
+        <dt>Клієнт</dt>
+        <dd><a href="{% url 'orders' %}?client={{ order.client_id }}">{{ order.client.client.name|default:order.client.username }}</a></dd>
+        {% endif %}
+        <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
+        <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
+        {% if order.vehicle %}
+        <dt>Автобус</dt>
+        <dd>{% if for_manager %}<a href="{% url 'vehicle_detail' order.vehicle_id %}">{{ order.vehicle }}</a>{% else %}{{ order.vehicle.name }}{% endif %}</dd>
+        {% endif %}
+        {% if order.total_price %}<dt>Ціна</dt><dd><strong>{{ order.total_price }} грн</strong></dd>{% endif %}
+    </dl>
+    <footer class="tile-actions">
+        {% if for_manager %}
+            {% if order.status == order.Status.NEW %}
+            <a href="{% url 'order_plan' order.pk %}" class="btn btn-small">Опрацювати</a>
+            <a href="{% url 'order_reject' order.pk %}" class="btn btn-small btn-danger-ghost">Відхилити</a>
+            {% elif order.status == order.Status.AWAITING %}
+            <span class="muted">Чекаємо підтвердження клієнта</span>
+            {% endif %}
+        {% else %}
+            {% if order.status == order.Status.AWAITING %}
+            <a href="{% url 'order_confirm' order.pk %}" class="btn btn-small">Підтвердити</a>
+            <a href="{% url 'order_decline' order.pk %}" class="btn btn-small btn-danger-ghost">Відмовитися</a>
+            {% elif order.status == order.Status.NEW %}
+            <a href="{% url 'order_cancel' order.pk %}" class="btn btn-small btn-danger-ghost">Скасувати</a>
+            {% endif %}
+        {% endif %}
+    </footer>
+</article>

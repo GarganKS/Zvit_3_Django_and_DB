@@ -1,85 +1,100 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="uk">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light dark" />
         <title>{% block title %}BusFlow{% endblock %}</title>
-        <style>
-            body { font-family: system-ui, sans-serif; margin: 0; }
-            header { background: #1f2937; color: #fff; padding: 0.75rem 1rem; }
-            nav { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-            nav a { color: #e5e7eb; text-decoration: none; padding: 0.4rem 0.7rem; border-radius: 0.4rem; }
-            nav a:hover { background: #374151; color: #fff; }
-            nav a.active { background: #2563eb; color: #fff; }
-            .nav-right { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
-            .nav-user { color: #e5e7eb; }
-            nav button { background: none; border: 1px solid #4b5563; color: #e5e7eb; padding: 0.4rem 0.7rem; border-radius: 0.4rem; cursor: pointer; font: inherit; }
-            nav button:hover { background: #374151; color: #fff; }
-            nav form { display: flex; margin: 0; max-width: none; }
-            main { padding: 1rem; max-width: 900px; margin: 0 auto; }
-            table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-            th, td { border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; text-align: left; }
-            th { background: #f3f4f6; }
-            tbody tr:nth-child(even) { background: #f9fafb; }
-            form { display: grid; gap: 0.75rem; max-width: 26rem; margin-top: 1rem; }
-            label { font-weight: 600; }
-            input, textarea, select { padding: 0.4rem 0.6rem; border: 1px solid #d1d5db; border-radius: 0.4rem; font: inherit; width: 100%; box-sizing: border-box; }
-            button[type="submit"] { justify-self: start; background: #2563eb; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer; font: inherit; }
-            button[type="submit"]:hover { background: #1d4ed8; }
-            .helptext { color: #6b7280; font-size: 0.85rem; display: block; }
-            .errorlist { color: #b91c1c; margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
-            .error-text { color: #b91c1c; }
-            .muted { color: #6b7280; font-size: 0.9em; }
-            .messages { list-style: none; padding: 0; }
-            .messages li { padding: 0.5rem 0.75rem; border-radius: 0.4rem; margin-bottom: 0.5rem; }
-            .messages li.success { background: #dcfce7; color: #166534; }
-            .messages li.error, .messages li.warning { background: #fee2e2; color: #991b1b; }
-            footer { color: #6b7280; text-align: center; padding: 1rem; }
-        </style>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <script>
+            /* Тема визначається до відмальовування, щоб не було спалаху */
+            (function () {
+                try {
+                    var t = localStorage.getItem("busflow-theme");
+                    if (t !== "light" && t !== "dark") {
+                        t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                    }
+                    document.documentElement.setAttribute("data-theme", t);
+                } catch (e) {}
+            })();
+        </script>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+        {% block extra_head %}{% endblock %}
     </head>
-    <body>
-        <header>
-            <nav>
-                <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Головна</a>
-                {% if is_manager %}
-                <a href="{% url 'routes' %}" class="{% if request.resolver_match.url_name == 'routes' %}active{% endif %}">Маршрути</a>
-                <a href="{% url 'stops' %}" class="{% if request.resolver_match.url_name == 'stops' %}active{% endif %}">Зупинки</a>
-                <a href="{% url 'trips' %}" class="{% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
-                <a href="{% url 'vehicles' %}" class="{% if request.resolver_match.url_name == 'vehicles' %}active{% endif %}">Транспорт</a>
-                <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Замовлення</a>
-                {% endif %}
-                {% if is_client %}
-                <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Мої замовлення</a>
-                <a href="{% url 'order_new' %}" class="{% if request.resolver_match.url_name == 'order_new' %}active{% endif %}">Замовити автобус</a>
-                <a href="{% url 'trips' %}" class="{% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
-                {% endif %}
-                <div class="nav-right">
-                    {% if user.is_staff %}
-                    <a href="{% url 'admin:index' %}" class="admin-link">Адмін-панель</a>
+    <body class="{% block body_class %}{% endblock %}">
+        <a class="skip-link" href="#content">Перейти до вмісту</a>
+        {% block header %}
+        {% with page=request.resolver_match.url_name %}
+        <header class="site-header" id="site-header">
+            <nav class="site-nav" aria-label="Головна навігація">
+                <a href="{% if is_admin %}{% url 'admin:index' %}{% else %}{% url 'home' %}{% endif %}" class="brand">
+                    <span class="brand-mark"><i data-lucide="bus"></i></span>
+                    BusFlow
+                </a>
+                <div class="nav-links" id="nav-links">
+                    {% if is_manager %}
+                    <a href="{% url 'home' %}" class="nav-link {% if page == 'home' %}active{% endif %}"><i data-lucide="layout-dashboard"></i>Огляд</a>
+                    <a href="{% url 'routes' %}" class="nav-link {% if 'route' in page %}active{% endif %}"><i data-lucide="route"></i>Маршрути</a>
+                    <a href="{% url 'stops' %}" class="nav-link {% if 'stop' in page %}active{% endif %}"><i data-lucide="map-pin"></i>Зупинки</a>
+                    <a href="{% url 'trips' %}" class="nav-link {% if 'trip' in page or 'ticket' in page %}active{% endif %}"><i data-lucide="calendar-clock"></i>Рейси</a>
+                    <a href="{% url 'vehicles' %}" class="nav-link {% if 'vehicle' in page %}active{% endif %}"><i data-lucide="bus"></i>Транспорт</a>
+                    <a href="{% url 'orders' %}" class="nav-link {% if 'order' in page %}active{% endif %}"><i data-lucide="clipboard-list"></i>Замовлення</a>
                     {% endif %}
-                    {% if user.is_authenticated %}
-                    <span class="nav-user">{{ user.username }}</span>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit">Вийти</button>
-                    </form>
-                    {% else %}
-                    <a href="{% url 'login' %}">Увійти</a>
-                    <a href="{% url 'register' %}">Реєстрація</a>
+                    {% if is_client %}
+                    <a href="{% url 'home' %}" class="nav-link {% if page == 'home' %}active{% endif %}"><i data-lucide="layout-dashboard"></i>Головна</a>
+                    <a href="{% url 'orders' %}" class="nav-link {% if 'order' in page %}active{% endif %}"><i data-lucide="clipboard-list"></i>Мої замовлення</a>
+                    <a href="{% url 'trips' %}" class="nav-link {% if 'trip' in page %}active{% endif %}"><i data-lucide="calendar-clock"></i>Рейси</a>
                     {% endif %}
                 </div>
+                <div class="nav-right{% if not user.is_authenticated %} is-guest{% endif %}">
+                    <button type="button" class="nav-btn theme-toggle" data-theme-toggle aria-label="Змінити тему" title="Змінити тему">
+                        <i data-lucide="moon" class="icon-moon"></i><i data-lucide="sun" class="icon-sun"></i>
+                    </button>
+                    {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" class="nav-btn" aria-label="Адмін-панель" title="Адмін-панель"><i data-lucide="settings"></i></a>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                    <span class="nav-user">
+                        <span class="avatar">{{ user.username|slice:":1" }}</span>
+                        <span class="nav-user-name">{{ user.username }}</span>
+                    </span>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-btn" aria-label="Вийти" title="Вийти"><i data-lucide="log-out"></i></button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="nav-text-link">Увійти</a>
+                    <a href="{% url 'register' %}" class="btn btn-accent btn-small">Реєстрація</a>
+                    {% endif %}
+                </div>
+                <button type="button" class="nav-btn nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="nav-links" aria-label="Меню">
+                    <i data-lucide="menu"></i>
+                </button>
             </nav>
         </header>
-        <main>
+        {% endwith %}
+        {% endblock %}
+        <main id="content" class="container">
             {% if messages %}
-            <ul class="messages">
+            <ul class="messages" role="status">
                 {% for message in messages %}
-                <li class="{{ message.tags }}">{{ message }}</li>
+                <li class="{{ message.tags }}">
+                    {% if 'success' in message.tags %}<i data-lucide="circle-check"></i>
+                    {% elif 'error' in message.tags or 'warning' in message.tags %}<i data-lucide="circle-alert"></i>
+                    {% else %}<i data-lucide="info"></i>{% endif %}
+                    <span class="msg-text">{{ message }}</span>
+                    <button type="button" class="msg-close" data-dismiss aria-label="Закрити"><i data-lucide="x"></i></button>
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}
             {% block content %}{% endblock %}
         </main>
-        <footer>BusFlow &copy; 2026</footer>
+        {% block footer %}<footer class="site-footer">BusFlow &copy; 2026</footer>{% endblock %}
+        <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+        <script src="{% static 'js/app.js' %}"></script>
+        {% block scripts %}{% endblock %}
     </body>
 </html>

@@ -1,12 +1,25 @@
 {% extends 'base.html' %}
 {% block title %}Вхід - BusFlow{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
 {% block content %}
-<h2>Вхід</h2>
-{% if form.errors %}<p class="error-text">Невірний логін або пароль. Спробуйте ще раз.</p>{% endif %}
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button type="submit">Увійти</button>
-</form>
-<p>Немає акаунта? <a href="{% url 'register' %}">Зареєструватися</a></p>
+<div class="auth">
+    {% include "_auth_aside.html" %}
+    <div class="auth-main">
+        <div class="auth-top"><button type="button" class="nav-btn theme-toggle" data-theme-toggle aria-label="Змінити тему"><i data-lucide="moon" class="icon-moon"></i><i data-lucide="sun" class="icon-sun"></i></button></div>
+        <div class="auth-card">
+            <a href="{% url 'home' %}" class="brand auth-mobile-brand"><span class="brand-mark"><i data-lucide="bus"></i></span>BusFlow</a>
+            <h1>Вхід в акаунт</h1>
+            <p class="lead">Введіть логін і пароль, щоб продовжити.</p>
+            {% if form.errors %}<div class="form-alert"><i data-lucide="circle-alert"></i>Невірний логін або пароль. Спробуйте ще раз.</div>{% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-grid">{{ form.as_div }}</div>
+                <div class="form-actions"><button type="submit" class="btn btn-block"><i data-lucide="log-in"></i>Увійти</button></div>
+            </form>
+            <p class="form-note">Немає акаунта? <a href="{% url 'register' %}">Зареєструватися</a></p>
+        </div>
+    </div>
+</div>
 {% endblock %}

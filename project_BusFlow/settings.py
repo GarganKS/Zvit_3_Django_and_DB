@@ -10,22 +10,42 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Налаштування з .env (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT,
+# ALLOWED_HOSTS). Значення, вже задані в оточенні, не перевизначаються.
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-p$+(0yc_d^n-m1+8=52jkiz1l5ri%vpq9trn+iac=6cko_1dq*"
+# Ключ задається у .env (DJANGO_SECRET_KEY) або в змінній оточення.
+# У git кодом не тримається - секрет, який лежить у репозиторії, не секрет.
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "Не задано DJANGO_SECRET_KEY. Скопіюйте .env.example у .env "
+        "і вкажіть ключ, або задайте змінну оточення."
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# За замовчуванням вимкнено - вмикається лише у .env (DJANGO_DEBUG=1).
+DEBUG = os.environ.get("DJANGO_DEBUG", "0").lower() in ("1", "true", "yes", "on")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    if h.strip()
+]
 
 
 # Application definition
@@ -74,10 +94,34 @@ WSGI_APPLICATION = "project_BusFlow.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+# СУБД - MySQL 8 (див. docker-compose.yml). Параметри беруться з
+# змінних оточення, які підтягуються з файлу .env через python-dotenv.
+#
+#   DB_NAME=busflow DB_USER=busflow DB_PASSWORD=... DB_HOST=127.0.0.1 DB_PORT=3307
+DB_NAME = os.environ.get("DB_NAME", "busflow")
+DB_USER = os.environ.get("DB_USER", "busflow")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_HOST = os.environ.get("DB_HOST", "127.0.0.1")
+DB_PORT = os.environ.get("DB_PORT", "3307")
+
+if not DB_PASSWORD:
+    raise ImproperlyConfigured(
+        "Не задано DB_PASSWORD. Скопіюйте .env.example у .env "
+        "і вкажіть пароль, або задайте змінну оточення."
+    )
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": DB_NAME,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
+        "CONN_MAX_AGE": 60,
     }
 }
 
@@ -106,7 +150,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "uk"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Kyiv"
 
 USE_I18N = True
 
@@ -117,16 +161,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
-
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# Карти та маршрути
+# MAP_ROUTING_ENABLED - чи рахувати реальні траси маршрутів через зовнішній
+# сервіс OSRM (потрібен інтернет). Якщо False, показується пряма лінія між
+# зупинками.
+MAP_ROUTING_ENABLED = True
+OSRM_URL = "https://router.project-osrm.org/route/v1/driving/"
+OSRM_TIMEOUT = 15
 
 
 # Auth

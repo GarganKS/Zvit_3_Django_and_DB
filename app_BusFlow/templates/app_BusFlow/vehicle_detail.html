@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ vehicle.name }} - BusFlow{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <a href="{% url 'vehicles' %}" class="back"><i data-lucide="arrow-left"></i>Увесь транспорт</a>
+        <h1>{{ vehicle.name }}</h1>
+    </div>
+    <div class="cluster">
+        <a href="{% url 'vehicle_edit' vehicle.pk %}" class="btn btn-secondary"><i data-lucide="pencil"></i>Редагувати</a>
+    </div>
+</div>
+<div class="detail-grid">
+    <div class="detail-main">
+        <section class="panel panel-flush">
+            <header class="panel-head">
+                <h2><i data-lucide="calendar-clock"></i>Рейси</h2>
+                <a class="link" href="{% url 'trips' %}?vehicle={{ vehicle.pk }}">Відкрити у списку рейсів</a>
+            </header>
+            {% if trips %}
+            <div class="table-wrap">
+            <table class="stack-table">
+                <thead><tr><th>Маршрут</th><th>Відправлення</th><th>Статус</th></tr></thead>
+                <tbody>
+                    {% for trip in trips %}
+                    <tr>
+                        <td data-label="Маршрут"><a href="{% url 'route_detail' trip.route_id %}">{{ trip.route.display_name }}</a></td>
+                        <td data-label="Відправлення"><a href="{% url 'trip_detail' trip.pk %}">{{ trip.departure_time|date:"d.m.Y H:i"|default:"Без часу" }}</a></td>
+                        <td data-label="Статус">{% include "_status.html" with status=trip.status %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}<p class="panel-empty">Рейсів немає.</p>{% endif %}
+        </section>
+
+        <section class="panel panel-flush">
+            <header class="panel-head">
+                <h2><i data-lucide="clipboard-list"></i>Замовлення</h2>
+                <a class="link" href="{% url 'orders' %}?vehicle={{ vehicle.pk }}">Відкрити у списку замовлень</a>
+            </header>
+            {% if orders %}
+            <div class="table-wrap">
+            <table class="stack-table">
+                <thead><tr><th>Клієнт</th><th>Напрямок</th><th>Відправлення</th><th>Статус</th></tr></thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td data-label="Клієнт"><a href="{% url 'orders' %}?client={{ order.client_id }}">{{ order.client.client.name|default:order.client.username }}</a></td>
+                        <td data-label="Напрямок"><a href="{% url 'order_detail' order.pk %}">{{ order.destination }}</a></td>
+                        <td data-label="Відправлення">{{ order.departure_time|date:"d.m.Y H:i" }}</td>
+                        <td data-label="Статус">{% include "_status.html" with status=order.status %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}<p class="panel-empty">Замовлень немає.</p>{% endif %}
+        </section>
+    </div>
+    <aside class="detail-side">
+        <section class="panel">
+            <header class="panel-head"><h2>Характеристики</h2>{% include "_status.html" with status=vehicle.status %}</header>
+            <div class="panel-body">
+                <dl class="kv">
+                    <div class="kv-row"><dt>Номер</dt><dd>{{ vehicle.plate_number }}</dd></div>
+                    <div class="kv-row"><dt>Водій</dt><dd>{{ vehicle.driver|default:"-" }}</dd></div>
+                    <div class="kv-row"><dt>Місткість</dt><dd>{{ vehicle.capacity }} місць</dd></div>
+                </dl>
+            </div>
+        </section>
+    </aside>
+</div>
+{% endblock %}

@@ -1,41 +1,65 @@
 {% extends 'base.html' %}
 {% block title %}Транспорт - BusFlow{% endblock %}
 {% block content %}
-<h2>Транспорт</h2>
-<p><a href="{% url 'vehicle_new' %}">Додати транспорт</a></p>
-<table>
+<div class="page-head">
+    <div>
+        <h1>Транспорт</h1>
+        <p class="page-sub">Автобуси, водії та їхня доступність.</p>
+    </div>
+    <a href="{% url 'vehicle_new' %}" class="btn"><i data-lucide="plus"></i>Додати транспорт</a>
+</div>
+<form method="get" class="filters">
+    <label class="search"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Пошук: назва, номер або водій" aria-label="Пошук" /></label>
+    <select name="status" aria-label="Статус">
+        <option value="">Усі статуси</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Знайти</button>
+    {% if filtered %}<a href="{% url 'vehicles' %}" class="btn btn-ghost"><i data-lucide="rotate-ccw"></i>Скинути</a>{% endif %}
+</form>
+<div class="toolbar"><span class="count" data-table-count="vehicles-table"></span></div>
+<div class="panel panel-flush"><div class="table-wrap">
+<table class="data-table stack-table" id="vehicles-table">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Назва</th>
-            <th>Номер</th>
-            <th>Водій</th>
-            <th>Місткість</th>
-            <th>Статус</th>
-            <th>Кількість рейсів</th>
+            <th data-sort="num">ID</th>
+            <th data-sort="text">Назва</th>
+            <th data-sort="text">Номер</th>
+            <th data-sort="text">Водій</th>
+            <th data-sort="num">Місткість</th>
+            <th data-sort="text">Статус</th>
+            <th data-sort="num">Рейсів</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         {% for vehicle in object_list %}
         <tr>
-            <td>{{ vehicle.id }}</td>
-            <td>{{ vehicle.name }}</td>
-            <td>{{ vehicle.plate_number }}</td>
-            <td>{{ vehicle.driver|default:"-" }}</td>
-            <td>{{ vehicle.capacity }}</td>
-            <td>{{ vehicle.status }}</td>
-            <td>{{ vehicle.trip_count }}</td>
-            <td>
-                <a href="{% url 'vehicle_edit' vehicle.pk %}">Редагувати</a>
-                <a href="{% url 'vehicle_delete' vehicle.pk %}">Видалити</a>
+            <td data-label="ID" class="id">{{ vehicle.id }}</td>
+            <td data-label="Назва" class="cell-main"><a href="{% url 'vehicle_detail' vehicle.pk %}">{{ vehicle.name }}</a></td>
+            <td data-label="Номер">{{ vehicle.plate_number }}</td>
+            <td data-label="Водій">{{ vehicle.driver|default:"-" }}</td>
+            <td data-label="Місткість">{{ vehicle.capacity }}</td>
+            <td data-label="Статус">{% include "_status.html" with status=vehicle.status %}</td>
+            <td data-label="Рейсів">{% if vehicle.trip_count %}<a href="{% url 'trips' %}?vehicle={{ vehicle.pk }}">{{ vehicle.trip_count }}</a>{% else %}<span class="muted">0</span>{% endif %}</td>
+            <td class="actions">
+                <div class="cluster">
+                    <a href="{% url 'vehicle_edit' vehicle.pk %}" class="icon-btn" title="Редагувати" aria-label="Редагувати"><i data-lucide="pencil"></i></a>
+                    <a href="{% url 'vehicle_delete' vehicle.pk %}" class="icon-btn danger" title="Видалити" aria-label="Видалити"><i data-lucide="trash-2"></i></a>
+                </div>
             </td>
         </tr>
         {% empty %}
-        <tr>
-            <td colspan="8">Транспорт ще не додано.</td>
+        <tr class="empty-row">
+            <td colspan="8" class="empty">
+                {% if filtered %}За вашим запитом транспорту не знайдено. <a href="{% url 'vehicles' %}">Скинути фільтри</a>
+                {% else %}Транспорт ще не додано. <a href="{% url 'vehicle_new' %}">Додати перший автобус</a>{% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div></div>
 {% endblock %}

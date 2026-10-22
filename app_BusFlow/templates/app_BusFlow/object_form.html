@@ -1,12 +1,23 @@
 {% extends 'base.html' %}
 {% block title %}Редагування - BusFlow{% endblock %}
 {% block content %}
-<h2>{{ title|default:"Форма" }}</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button type="submit">Зберегти</button>
-</form>
-{% block form_extra %}{% endblock %}
-<p><a href="{{ request.META.HTTP_REFERER|default:'/' }}">Назад</a></p>
+<div class="page-head">
+    <div>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="back"><i data-lucide="arrow-left"></i>Назад</a>
+        <h1>{{ title|default:"Форма" }}</h1>
+    </div>
+</div>
+<div class="panel form-panel">
+    <div class="panel-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-grid">{{ form.as_div }}</div>
+            <div class="form-actions">
+                <button type="submit" class="btn"><i data-lucide="check"></i>Зберегти</button>
+                <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-ghost">Скасувати</a>
+            </div>
+        </form>
+        {% block form_extra %}{% endblock %}
+    </div>
+</div>
 {% endblock %}

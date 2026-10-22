@@ -1,19 +1,37 @@
 {% extends 'base.html' %}
 {% block title %}Опрацювання замовлення - BusFlow{% endblock %}
 {% block content %}
-<h2>Опрацювання замовлення #{{ order.pk }}</h2>
-<p>
-    <strong>{{ order.direction }}</strong><br />
-    Клієнт: {{ order.client.username }} ({{ order.client.client_profile.organization }})<br />
-    Пасажирів: {{ order.passengers }}<br />
-    Час відправлення: {{ order.departure_time|date:"d.m.Y H:i" }}
-    {% if order.comment %}<br />Коментар: {{ order.comment }}{% endif %}
-</p>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_div }}
-    <button type="submit">Запланувати</button>
-</form>
-<p class="muted">Оберіть лише вільний автобус (статус «Очікує») з місткістю не меншою за кількість пасажирів.</p>
-<p><a href="{% url 'orders' %}">Назад до замовлень</a></p>
+<div class="page-head">
+    <div>
+        <a href="{% url 'orders' %}" class="back"><i data-lucide="arrow-left"></i>Замовлення</a>
+        <h1>Опрацювання замовлення #{{ order.pk }}</h1>
+    </div>
+</div>
+<div class="detail-grid">
+    <div class="panel">
+        <header class="panel-head"><h2>Пропозиція клієнту</h2></header>
+        <div class="panel-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-grid">{{ form.as_div }}</div>
+                <div class="note"><i data-lucide="info"></i><span>Оберіть лише вільний автобус (статус «Очікує») з місткістю не меншою за кількість пасажирів. Після збереження автобус резервується, а клієнт має підтвердити замовлення.</span></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn"><i data-lucide="send"></i>Запропонувати клієнту</button>
+                    <a href="{% url 'orders' %}" class="btn btn-ghost">Назад до замовлень</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <aside class="panel">
+        <header class="panel-head"><h2>Заявка</h2></header>
+        <div class="panel-body">
+            <strong>{{ order.destination }}</strong>
+            <dl class="kv" style="margin-top:10px">
+                <div class="kv-row"><dt>Клієнт</dt><dd>{{ order.client.client.name|default:order.client.username }}</dd></div>
+                <div class="kv-row"><dt>Пасажирів</dt><dd>{{ order.passengers }}</dd></div>
+                <div class="kv-row"><dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd></div>
+            </dl>
+        </div>
+    </aside>
+</div>
 {% endblock %}

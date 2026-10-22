@@ -1,38 +1,52 @@
 {% extends 'base.html' %}
-{% block title %}Зупинки маршруту - BusFlow{% endblock %}
+{% load static %}
+{% block title %}{% if is_new %}Новий маршрут{% else %}Редагування маршруту{% endif %} - BusFlow{% endblock %}
+{% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
-<style>form { max-width: none; }</style>
-<h2>Маршрут: {{ route.display_name }}</h2>
-<p>Вкажіть зупинки у порядку проходження - у полі «Номер» поставте порядковий номер.</p>
-<form method="post">
-    {% csrf_token %}
-    {{ formset.management_form }}
-    {% if formset.non_form_errors %}
-    <ul class="errorlist">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
-    {% endif %}
-    <table>
-        <thead>
-            <tr>
-                <th>Зупинка</th>
-                <th>Номер</th>
-                <th>Прибуття</th>
-                <th>Відправлення</th>
-                <th>Видалити</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for field in formset %}
-            <tr>
-                <td>{{ field.stop }}{{ field.stop.errors }}</td>
-                <td>{{ field.stop_sequence }}{{ field.stop_sequence.errors }}</td>
-                <td>{{ field.arrival_time }}{{ field.arrival_time.errors }}</td>
-                <td>{{ field.departure_time }}{{ field.departure_time.errors }}</td>
-                <td>{% if field.instance.pk %}{{ field.DELETE }}{% endif %}{{ field.id }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <button type="submit">Зберегти</button>
-</form>
-<p><a href="{% url 'routes' %}">Назад до маршрутів</a></p>
+<div class="page-head">
+    <div>
+        <a href="{% url 'routes' %}" class="back"><i data-lucide="arrow-left"></i>Усі маршрути</a>
+        <h1>{% if is_new %}Новий маршрут{% else %}Редагування маршруту{% endif %}</h1>
+        <p class="page-sub">Вкажіть зупинки в порядку проходження.</p>
+    </div>
+</div>
+<div class="split">
+    <form method="post" id="route-form" class="panel">
+        {% csrf_token %}
+        <div class="panel-body">
+            <div class="route-name-field">
+                {{ form.name.label_tag }}
+                {{ form.name }}
+                {{ form.name.errors }}
+                <span class="helptext">{{ form.name.help_text }}</span>
+            </div>
+            {{ formset.management_form }}
+            {% if formset.non_form_errors %}
+            <ul class="errorlist form-error">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+            <ol class="stop-list" id="stop-list">
+                {% for form in formset %}{% include "app_BusFlow/_stop_row.html" %}{% endfor %}
+            </ol>
+            <template id="stop-row-template">{% include "app_BusFlow/_stop_row.html" with form=formset.empty_form %}</template>
+            <noscript><p class="muted">Для додавання, видалення й зміни порядку зупинок потрібен JavaScript.</p></noscript>
+            <button type="button" class="btn btn-secondary" id="add-stop"><i data-lucide="plus"></i>Додати зупинку</button>
+            <div class="form-actions">
+                <button type="submit" class="btn"><i data-lucide="check"></i>Зберегти маршрут</button>
+                <a href="{% url 'routes' %}" class="btn btn-ghost">Скасувати</a>
+            </div>
+        </div>
+    </form>
+
+    <section class="panel route-preview">
+        <header class="panel-head"><h2><i data-lucide="map"></i>Попередній перегляд</h2></header>
+        <p class="muted" style="padding: 12px 18px 0; margin:0">Траса по вулицях будується автоматично за вибраними зупинками.</p>
+        <div style="padding:12px"><div class="map-canvas" id="route-map" style="border-radius: var(--r)"></div></div>
+    </section>
+</div>
+{{ stops_coords|json_script:"route-stops-coords" }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/route_form.js' %}"></script>
+<script src="{% static 'js/route_map.js' %}"></script>
 {% endblock %}
