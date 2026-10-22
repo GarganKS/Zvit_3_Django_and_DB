@@ -3,65 +3,75 @@
 {% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
-    <h2>{{ route.display_name }}</h2>
+    <div>
+        <a href="{% url 'routes' %}" class="back"><i data-lucide="arrow-left"></i>Усі маршрути</a>
+        <h1>{{ route.display_name }}</h1>
+    </div>
     <div class="cluster">
-        <a href="{% url 'route_edit' route.pk %}" class="btn btn-secondary">Редагувати</a>
-        <a href="{% url 'routes' %}">Усі маршрути</a>
+        <a href="{% url 'route_edit' route.pk %}" class="btn btn-secondary"><i data-lucide="pencil"></i>Редагувати</a>
     </div>
 </div>
 
-<section class="section">
-    <div class="section-head"><h3>Карта маршруту</h3></div>
-    {% include "app_BusFlow/_map.html" with map_data=route_map %}
-</section>
+<div class="detail-grid">
+    <div class="detail-main">
+        <section class="panel">
+            <header class="panel-head"><h2><i data-lucide="map"></i>Карта маршруту</h2></header>
+            {% include "app_BusFlow/_map.html" with map_data=route_map %}
+        </section>
 
-<section class="section">
-    <div class="section-head"><h3>Зупинки</h3></div>
-    <ol class="stops">
-        {% for link in route.stoponroute_set.all %}
-        <li>
-            <a href="{% url 'stop_detail' link.stop_id %}">{{ link.stop.name }}</a>
-            <span class="stop-address">{{ link.stop.address }}</span>
-        </li>
-        {% endfor %}
-    </ol>
-</section>
+        <section class="panel panel-flush">
+            <header class="panel-head">
+                <h2><i data-lucide="calendar-clock"></i>Рейси</h2>
+                <a class="link" href="{% url 'trips' %}?route={{ route.pk }}">Відкрити у списку рейсів</a>
+            </header>
+            {% if route.trip_set.all %}
+            <div class="table-wrap">
+            <table class="stack-table">
+                <thead><tr><th>Відправлення</th><th>Автобус</th><th>Статус</th><th>Ціна</th></tr></thead>
+                <tbody>
+                    {% for trip in route.trip_set.all %}
+                    <tr>
+                        <td data-label="Відправлення"><a href="{% url 'trip_detail' trip.pk %}">{{ trip.departure_time|date:"d.m.Y H:i"|default:"Без часу" }}</a></td>
+                        <td data-label="Автобус"><a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a></td>
+                        <td data-label="Статус">{% include "_status.html" with status=trip.status %}</td>
+                        <td data-label="Ціна">{{ trip.price }} грн</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+            <p class="panel-empty">Рейсів за цим маршрутом ще немає. <a href="{% url 'trip_new' %}">Додати рейс</a></p>
+            {% endif %}
+        </section>
+    </div>
 
-<section class="section">
-    <div class="section-head">
-        <h3>Автобуси на маршруті</h3>
-    </div>
-    <div class="cluster">
-        {% for vehicle in route.used_vehicles %}
-        <a href="{% url 'vehicle_detail' vehicle.pk %}" class="chip">{{ vehicle }}</a>
-        {% empty %}<p class="muted">Автобусів ще немає: за цим маршрутом немає рейсів.</p>{% endfor %}
-    </div>
-</section>
-
-<section class="section">
-    <div class="section-head">
-        <h3>Рейси</h3>
-        <a href="{% url 'trips' %}?route={{ route.pk }}">Відкрити у списку рейсів</a>
-    </div>
-    {% if route.trip_set.all %}
-    <div class="table-wrap">
-    <table>
-        <thead><tr><th>Відправлення</th><th>Автобус</th><th>Статус</th><th>Ціна</th></tr></thead>
-        <tbody>
-            {% for trip in route.trip_set.all %}
-            <tr>
-                <td><a href="{% url 'trip_detail' trip.pk %}">{{ trip.departure_time|date:"d.m.Y H:i"|default:"Без часу" }}</a></td>
-                <td><a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle.name }}</a></td>
-                <td>{% include "_status.html" with status=trip.status %}</td>
-                <td>{{ trip.price }} грн</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    {% else %}
-    <p class="muted">Рейсів за цим маршрутом ще немає. <a href="{% url 'trip_new' %}">Додати рейс</a></p>
-    {% endif %}
-</section>
+    <aside class="detail-side">
+        <section class="panel">
+            <header class="panel-head"><h2><i data-lucide="map-pin"></i>Зупинки</h2></header>
+            <div class="panel-body">
+                <ol class="timeline">
+                    {% for link in route.stoponroute_set.all %}
+                    <li class="{% if forloop.first %}is-first{% elif forloop.last %}is-last{% endif %}">
+                        <span class="dot">{{ forloop.counter }}</span>
+                        <a class="t-name" href="{% url 'stop_detail' link.stop_id %}">{{ link.stop.name }}</a>
+                        <span class="t-addr">{{ link.stop.address }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </section>
+        <section class="panel">
+            <header class="panel-head"><h2><i data-lucide="bus"></i>Автобуси на маршруті</h2></header>
+            <div class="panel-body">
+                <div class="cluster">
+                    {% for vehicle in route.used_vehicles %}
+                    <a href="{% url 'vehicle_detail' vehicle.pk %}" class="chip">{{ vehicle }}</a>
+                    {% empty %}<p class="muted" style="margin:0">Автобусів ще немає: за цим маршрутом немає рейсів.</p>{% endfor %}
+                </div>
+            </div>
+        </section>
+    </aside>
+</div>
 {% endblock %}
 {% block scripts %}{% include "app_BusFlow/_leaflet_scripts.html" %}{% endblock %}

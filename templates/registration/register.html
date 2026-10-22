@@ -1,16 +1,24 @@
 {% extends 'base.html' %}
 {% block title %}Реєстрація - BusFlow{% endblock %}
+{% block body_class %}auth-body{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
 {% block content %}
-<div class="form-narrow">
-    <h2>Реєстрація клієнта</h2>
-    <p class="muted">Створіть акаунт, щоб замовляти автобус для поїздок.</p>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-grid">{{ form.as_div }}</div>
-        <div class="form-actions">
-            <button type="submit">Зареєструватися</button>
+<div class="auth">
+    {% include "_auth_aside.html" %}
+    <div class="auth-main">
+        <div class="auth-top"><button type="button" class="nav-btn theme-toggle" data-theme-toggle aria-label="Змінити тему"><i data-lucide="moon" class="icon-moon"></i><i data-lucide="sun" class="icon-sun"></i></button></div>
+        <div class="auth-card">
+            <a href="{% url 'home' %}" class="brand auth-mobile-brand"><span class="brand-mark"><i data-lucide="bus"></i></span>BusFlow</a>
+            <h1>Реєстрація клієнта</h1>
+            <p class="lead">Створіть акаунт, щоб замовляти автобуси для поїздок.</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-grid">{{ form.as_div }}</div>
+                <div class="form-actions"><button type="submit" class="btn btn-block"><i data-lucide="user-plus"></i>Зареєструватися</button></div>
+            </form>
+            <p class="form-note">Вже маєте акаунт? <a href="{% url 'login' %}">Увійти</a></p>
         </div>
-    </form>
-    <p class="muted form-note">Вже маєте акаунт? <a href="{% url 'login' %}">Увійти</a></p>
+    </div>
 </div>
 {% endblock %}

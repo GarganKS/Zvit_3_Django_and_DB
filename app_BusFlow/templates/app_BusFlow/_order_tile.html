@@ -21,16 +21,16 @@
         {% if for_manager %}
             {% if order.status == order.Status.NEW %}
             <a href="{% url 'order_plan' order.pk %}" class="btn btn-small">Опрацювати</a>
-            <a href="{% url 'order_reject' order.pk %}" class="danger">Відхилити</a>
+            <a href="{% url 'order_reject' order.pk %}" class="btn btn-small btn-danger-ghost">Відхилити</a>
             {% elif order.status == order.Status.AWAITING %}
             <span class="muted">Чекаємо підтвердження клієнта</span>
             {% endif %}
         {% else %}
             {% if order.status == order.Status.AWAITING %}
             <a href="{% url 'order_confirm' order.pk %}" class="btn btn-small">Підтвердити</a>
-            <a href="{% url 'order_decline' order.pk %}" class="danger">Відмовитися</a>
+            <a href="{% url 'order_decline' order.pk %}" class="btn btn-small btn-danger-ghost">Відмовитися</a>
             {% elif order.status == order.Status.NEW %}
-            <a href="{% url 'order_cancel' order.pk %}" class="danger">Скасувати</a>
+            <a href="{% url 'order_cancel' order.pk %}" class="btn btn-small btn-danger-ghost">Скасувати</a>
             {% endif %}
         {% endif %}
     </footer>

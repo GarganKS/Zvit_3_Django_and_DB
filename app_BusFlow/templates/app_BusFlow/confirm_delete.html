@@ -1,13 +1,18 @@
 {% extends 'base.html' %}
 {% block title %}Видалення - BusFlow{% endblock %}
 {% block content %}
-<h2>{{ title|default:"Видалення" }}</h2>
-<p>Впевнені, що хочете видалити «{{ object }}»? Цю дію не можна скасувати.</p>
-<form method="post">
-    {% csrf_token %}
-    <div class="form-actions">
-        <button type="submit" class="btn-danger">Так, видалити</button>
-        <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Ні, повернутися</a>
+<div class="panel confirm">
+    <div class="panel-body">
+        <span class="confirm-icon danger"><i data-lucide="trash-2"></i></span>
+        <h1>{{ title|default:"Видалення" }}</h1>
+        <p class="muted">Впевнені, що хочете видалити «{{ object }}»? Цю дію не можна скасувати.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions" style="margin-top:20px">
+                <button type="submit" class="btn btn-danger"><i data-lucide="trash-2"></i>Так, видалити</button>
+                <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-secondary">Ні, повернутися</a>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 {% endblock %}

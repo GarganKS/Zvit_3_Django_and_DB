@@ -3,53 +3,98 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light dark" />
         <title>{% block title %}BusFlow{% endblock %}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <script>
+            /* Тема визначається до відмальовування, щоб не було спалаху */
+            (function () {
+                try {
+                    var t = localStorage.getItem("busflow-theme");
+                    if (t !== "light" && t !== "dark") {
+                        t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                    }
+                    document.documentElement.setAttribute("data-theme", t);
+                } catch (e) {}
+            })();
+        </script>
         <link rel="stylesheet" href="{% static 'css/style.css' %}" />
         {% block extra_head %}{% endblock %}
     </head>
-    <body>
-        <header class="site-header">
-            <nav class="site-nav">
-                <a href="{% if is_admin %}{% url 'admin:index' %}{% else %}{% url 'home' %}{% endif %}" class="brand">BusFlow</a>
-                {% if is_manager %}
-                <a href="{% url 'routes' %}" class="nav-link {% if request.resolver_match.url_name == 'routes' %}active{% endif %}">Маршрути</a>
-                <a href="{% url 'stops' %}" class="nav-link {% if request.resolver_match.url_name == 'stops' %}active{% endif %}">Зупинки</a>
-                <a href="{% url 'trips' %}" class="nav-link {% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
-                <a href="{% url 'vehicles' %}" class="nav-link {% if request.resolver_match.url_name == 'vehicles' %}active{% endif %}">Транспорт</a>
-                <a href="{% url 'orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Замовлення</a>
-                {% endif %}
-                {% if is_client %}
-                <a href="{% url 'orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">Мої замовлення</a>
-                <a href="{% url 'trips' %}" class="nav-link {% if request.resolver_match.url_name == 'trips' %}active{% endif %}">Рейси</a>
-                {% endif %}
-                <div class="nav-right">
-                    {% if user.is_staff %}
-                    <a href="{% url 'admin:index' %}">Адмін-панель</a>
+    <body class="{% block body_class %}{% endblock %}">
+        <a class="skip-link" href="#content">Перейти до вмісту</a>
+        {% block header %}
+        {% with page=request.resolver_match.url_name %}
+        <header class="site-header" id="site-header">
+            <nav class="site-nav" aria-label="Головна навігація">
+                <a href="{% if is_admin %}{% url 'admin:index' %}{% else %}{% url 'home' %}{% endif %}" class="brand">
+                    <span class="brand-mark"><i data-lucide="bus"></i></span>
+                    BusFlow
+                </a>
+                <div class="nav-links" id="nav-links">
+                    {% if is_manager %}
+                    <a href="{% url 'home' %}" class="nav-link {% if page == 'home' %}active{% endif %}"><i data-lucide="layout-dashboard"></i>Огляд</a>
+                    <a href="{% url 'routes' %}" class="nav-link {% if 'route' in page %}active{% endif %}"><i data-lucide="route"></i>Маршрути</a>
+                    <a href="{% url 'stops' %}" class="nav-link {% if 'stop' in page %}active{% endif %}"><i data-lucide="map-pin"></i>Зупинки</a>
+                    <a href="{% url 'trips' %}" class="nav-link {% if 'trip' in page or 'ticket' in page %}active{% endif %}"><i data-lucide="calendar-clock"></i>Рейси</a>
+                    <a href="{% url 'vehicles' %}" class="nav-link {% if 'vehicle' in page %}active{% endif %}"><i data-lucide="bus"></i>Транспорт</a>
+                    <a href="{% url 'orders' %}" class="nav-link {% if 'order' in page %}active{% endif %}"><i data-lucide="clipboard-list"></i>Замовлення</a>
                     {% endif %}
-                    {% if user.is_authenticated %}
-                    <span class="nav-user">{{ user.username }}</span>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit">Вийти</button>
-                    </form>
-                    {% else %}
-                    <a href="{% url 'login' %}">Увійти</a>
-                    <a href="{% url 'register' %}">Реєстрація</a>
+                    {% if is_client %}
+                    <a href="{% url 'home' %}" class="nav-link {% if page == 'home' %}active{% endif %}"><i data-lucide="layout-dashboard"></i>Головна</a>
+                    <a href="{% url 'orders' %}" class="nav-link {% if 'order' in page %}active{% endif %}"><i data-lucide="clipboard-list"></i>Мої замовлення</a>
+                    <a href="{% url 'trips' %}" class="nav-link {% if 'trip' in page %}active{% endif %}"><i data-lucide="calendar-clock"></i>Рейси</a>
                     {% endif %}
                 </div>
+                <div class="nav-right{% if not user.is_authenticated %} is-guest{% endif %}">
+                    <button type="button" class="nav-btn theme-toggle" data-theme-toggle aria-label="Змінити тему" title="Змінити тему">
+                        <i data-lucide="moon" class="icon-moon"></i><i data-lucide="sun" class="icon-sun"></i>
+                    </button>
+                    {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" class="nav-btn" aria-label="Адмін-панель" title="Адмін-панель"><i data-lucide="settings"></i></a>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                    <span class="nav-user">
+                        <span class="avatar">{{ user.username|slice:":1" }}</span>
+                        <span class="nav-user-name">{{ user.username }}</span>
+                    </span>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-btn" aria-label="Вийти" title="Вийти"><i data-lucide="log-out"></i></button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="nav-text-link">Увійти</a>
+                    <a href="{% url 'register' %}" class="btn btn-accent btn-small">Реєстрація</a>
+                    {% endif %}
+                </div>
+                <button type="button" class="nav-btn nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="nav-links" aria-label="Меню">
+                    <i data-lucide="menu"></i>
+                </button>
             </nav>
         </header>
-        <main>
+        {% endwith %}
+        {% endblock %}
+        <main id="content" class="container">
             {% if messages %}
-            <ul class="messages">
+            <ul class="messages" role="status">
                 {% for message in messages %}
-                <li class="{{ message.tags }}">{{ message }}</li>
+                <li class="{{ message.tags }}">
+                    {% if 'success' in message.tags %}<i data-lucide="circle-check"></i>
+                    {% elif 'error' in message.tags or 'warning' in message.tags %}<i data-lucide="circle-alert"></i>
+                    {% else %}<i data-lucide="info"></i>{% endif %}
+                    <span class="msg-text">{{ message }}</span>
+                    <button type="button" class="msg-close" data-dismiss aria-label="Закрити"><i data-lucide="x"></i></button>
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}
             {% block content %}{% endblock %}
         </main>
-        <footer>BusFlow &copy; 2026</footer>
+        {% block footer %}<footer class="site-footer">BusFlow &copy; 2026</footer>{% endblock %}
+        <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+        <script src="{% static 'js/app.js' %}"></script>
         {% block scripts %}{% endblock %}
     </body>
 </html>

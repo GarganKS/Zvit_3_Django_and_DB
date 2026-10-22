@@ -3,69 +3,81 @@
 {% block extra_head %}{% include "app_BusFlow/_leaflet_head.html" %}{% endblock %}
 {% block content %}
 <div class="page-head">
-    <h2>Рейс #{{ trip.pk }}</h2>
+    <div>
+        <a href="{% url 'trips' %}" class="back"><i data-lucide="arrow-left"></i>Усі рейси</a>
+        <h1>Рейс #{{ trip.pk }}: {{ trip.route.display_name }}</h1>
+    </div>
     <div class="cluster">
-        {% if is_manager %}<a href="{% url 'trip_edit' trip.pk %}" class="btn btn-secondary">Редагувати</a>{% endif %}
-        <a href="{% url 'trips' %}">Усі рейси</a>
+        {% if is_manager and can_sell %}<a href="{% url 'ticket_sell' trip.pk %}" class="btn"><i data-lucide="ticket"></i>Продати квиток</a>{% endif %}
+        {% if is_manager %}<a href="{% url 'trip_edit' trip.pk %}" class="btn btn-secondary"><i data-lucide="pencil"></i>Редагувати</a>{% endif %}
     </div>
 </div>
 
-<div class="card">
-    <strong>{{ trip.route.display_name }}</strong>
-    <dl>
-        <dt>Маршрут</dt>
-        <dd>{% if is_manager %}<a href="{% url 'route_detail' trip.route_id %}">{{ trip.route.display_name }}</a>{% else %}{{ trip.route.display_name }}{% endif %}</dd>
-        <dt>Автобус</dt>
-        <dd>{% if is_manager %}<a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle }}</a>{% else %}{{ trip.vehicle.name }}{% endif %}</dd>
-        <dt>Статус</dt><dd>{% include "_status.html" with status=trip.status %}</dd>
-        <dt>Відправлення</dt><dd>{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</dd>
-        <dt>Прибуття</dt><dd>{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</dd>
-        <dt>Ціна квитка</dt><dd>{{ trip.price }} грн</dd>
-    </dl>
+<div class="detail-grid">
+    <div class="detail-main">
+        <section class="panel">
+            <header class="panel-head"><h2><i data-lucide="map"></i>Карта маршруту</h2></header>
+            {% include "app_BusFlow/_map.html" with map_data=route_map %}
+        </section>
+
+        <section class="panel panel-flush">
+            <header class="panel-head"><h2><i data-lucide="ticket"></i>Квитки</h2></header>
+            <div class="panel-body">
+                <div class="stats" style="margin-bottom:14px">
+                    <div class="stat"><span><span class="stat-value">{{ tickets_free }}</span><span class="stat-label">Вільних</span></span></div>
+                    <div class="stat"><span><span class="stat-value">{{ tickets_sold }}</span><span class="stat-label">Продано</span></span></div>
+                    <div class="stat"><span><span class="stat-value">{{ tickets_total }}</span><span class="stat-label">Усього</span></span></div>
+                </div>
+                <progress max="{{ tickets_total|default:1 }}" value="{{ tickets_sold }}" aria-label="Продано квитків"></progress>
+            </div>
+            {% if is_manager and sold_tickets %}
+            <div class="table-wrap" style="border-top:1px solid var(--line)">
+            <table class="stack-table">
+                <thead><tr><th>Квиток</th><th>Пасажир</th><th>Телефон</th><th></th></tr></thead>
+                <tbody>
+                    {% for ticket in sold_tickets %}
+                    <tr>
+                        <td data-label="Квиток" class="id">#{{ ticket.pk }}</td>
+                        <td data-label="Пасажир">{{ ticket.passenger_name }}</td>
+                        <td data-label="Телефон">{{ ticket.passenger_phone }}</td>
+                        <td class="actions">{% if trip.status == trip.Status.SCHEDULED %}<a href="{% url 'ticket_return' ticket.pk %}" class="btn btn-small btn-danger-ghost"><i data-lucide="undo-2"></i>Повернути</a>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <aside class="detail-side">
+        <section class="panel">
+            <header class="panel-head"><h2>Про рейс</h2>{% include "_status.html" with status=trip.status %}</header>
+            <div class="panel-body">
+                <dl class="kv">
+                    <div class="kv-row"><dt>Маршрут</dt><dd>{% if is_manager %}<a href="{% url 'route_detail' trip.route_id %}">{{ trip.route.display_name }}</a>{% else %}{{ trip.route.display_name }}{% endif %}</dd></div>
+                    <div class="kv-row"><dt>Автобус</dt><dd>{% if is_manager %}<a href="{% url 'vehicle_detail' trip.vehicle_id %}">{{ trip.vehicle }}</a>{% else %}{{ trip.vehicle.name }}{% endif %}</dd></div>
+                    <div class="kv-row"><dt>Відправлення</dt><dd class="num">{{ trip.departure_time|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+                    <div class="kv-row"><dt>Прибуття</dt><dd class="num">{{ trip.arrival_time|date:"d.m.Y H:i"|default:"-" }}</dd></div>
+                    <div class="kv-row"><dt>Ціна квитка</dt><dd class="num">{{ trip.price }} грн</dd></div>
+                </dl>
+            </div>
+        </section>
+        <section class="panel">
+            <header class="panel-head"><h2><i data-lucide="map-pin"></i>Зупинки</h2></header>
+            <div class="panel-body">
+                <ol class="timeline">
+                    {% for link in trip.route.stoponroute_set.all %}
+                    <li class="{% if forloop.first %}is-first{% elif forloop.last %}is-last{% endif %}">
+                        <span class="dot">{{ forloop.counter }}</span>
+                        {% if is_manager %}<a class="t-name" href="{% url 'stop_detail' link.stop_id %}">{{ link.stop.name }}</a>{% else %}<span class="t-name">{{ link.stop.name }}</span>{% endif %}
+                        <span class="t-addr">{{ link.stop.address }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </section>
+    </aside>
 </div>
-
-<section class="section">
-    <div class="section-head"><h3>Карта маршруту</h3></div>
-    {% include "app_BusFlow/_map.html" with map_data=route_map %}
-</section>
-
-<section class="section">
-    <div class="section-head"><h3>Зупинки</h3></div>
-    <ol class="stops">
-        {% for link in trip.route.stoponroute_set.all %}
-        <li>{% if is_manager %}<a href="{% url 'stop_detail' link.stop_id %}">{{ link.stop.name }}</a>{% else %}{{ link.stop.name }}{% endif %}
-            <span class="stop-address">{{ link.stop.address }}</span></li>
-        {% endfor %}
-    </ol>
-</section>
-
-<section class="section">
-    <div class="section-head">
-        <h3>Квитки</h3>
-        {% if is_manager and can_sell %}<a href="{% url 'ticket_sell' trip.pk %}" class="btn btn-small">Продати квиток</a>{% endif %}
-    </div>
-    <div class="stats">
-        <div class="stat"><span class="stat-value">{{ tickets_free }}</span><span class="stat-label">Вільних</span></div>
-        <div class="stat"><span class="stat-value">{{ tickets_sold }}</span><span class="stat-label">Продано</span></div>
-        <div class="stat"><span class="stat-value">{{ tickets_total }}</span><span class="stat-label">Усього</span></div>
-    </div>
-    {% if is_manager and sold_tickets %}
-    <div class="table-wrap">
-    <table>
-        <thead><tr><th>Квиток</th><th>Пасажир</th><th>Телефон</th><th></th></tr></thead>
-        <tbody>
-            {% for ticket in sold_tickets %}
-            <tr>
-                <td class="muted">#{{ ticket.pk }}</td>
-                <td>{{ ticket.passenger_name }}</td>
-                <td>{{ ticket.passenger_phone }}</td>
-                <td class="actions">{% if trip.status == trip.Status.SCHEDULED %}<a href="{% url 'ticket_return' ticket.pk %}" class="danger">Повернути</a>{% endif %}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    {% endif %}
-</section>
 {% endblock %}
 {% block scripts %}{% include "app_BusFlow/_leaflet_scripts.html" %}{% endblock %}

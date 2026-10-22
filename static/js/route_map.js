@@ -57,10 +57,13 @@
         markerLayer.clearLayers();
         stops.forEach(function (stop, index) {
             var icon = L.divIcon({
-                className: "map-marker",
+                className:
+                    "map-marker" +
+                    (stops.length > 1 && index === 0 ? " is-start" : "") +
+                    (stops.length > 1 && index === stops.length - 1 ? " is-end" : ""),
                 html: '<span class="map-marker-num">' + (index + 1) + "</span>",
-                iconSize: [26, 26],
-                iconAnchor: [13, 13],
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
             });
             L.marker([stop.lat, stop.lon], { icon: icon, title: stop.name })
                 .bindPopup("<strong>" + stop.name + "</strong>")
@@ -98,8 +101,8 @@
                 if (lineLayer) map.removeLayer(lineLayer);
                 L.polyline(points, { color: "#ffffff", weight: 9, opacity: 0.85 }).addTo(map);
                 lineLayer = L.polyline(points, {
-                    color: "#1f4e8c",
-                    weight: 4,
+                    color: "#2f6bff",
+                    weight: 5,
                     opacity: 0.95,
                 }).addTo(map);
             })

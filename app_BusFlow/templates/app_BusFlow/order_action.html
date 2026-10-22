@@ -1,22 +1,30 @@
 {% extends 'base.html' %}
 {% block title %}Підтвердження дії - BusFlow{% endblock %}
 {% block content %}
-<h2>Підтвердження</h2>
-<p>Впевнені, що хочете {{ action }} це замовлення?</p>
-<div class="card">
-    <strong>{{ order.destination }}</strong>
-    <dl>
-        <dt>Пасажирів</dt><dd>{{ order.passengers }}</dd>
-        <dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd>
-        <dt>Статус</dt><dd>{% include "_status.html" with status=order.status %}</dd>
-        {% if order.vehicle %}<dt>Автобус</dt><dd>{{ order.vehicle }}</dd><dt>Ціна</dt><dd>{{ order.total_price }} грн</dd>{% endif %}
-    </dl>
-</div>
-<form method="post">
-    {% csrf_token %}
-    <div class="form-actions">
-        <button type="submit"{% if danger %} class="btn-danger"{% endif %}>{{ button }}</button>
-        <a href="{% url 'orders' %}">Ні, повернутися</a>
+<div class="panel confirm">
+    <div class="panel-body">
+        <span class="confirm-icon{% if danger %} danger{% endif %}"><i data-lucide="{% if danger %}triangle-alert{% else %}circle-help{% endif %}"></i></span>
+        <h1>Підтвердження</h1>
+        <p class="muted">Впевнені, що хочете {{ action }} це замовлення?</p>
+        <div class="summary">
+            <strong>{{ order.destination }}</strong>
+            <dl class="kv">
+                <div class="kv-row"><dt>Пасажирів</dt><dd>{{ order.passengers }}</dd></div>
+                <div class="kv-row"><dt>Відправлення</dt><dd>{{ order.departure_time|date:"d.m.Y H:i" }}</dd></div>
+                <div class="kv-row"><dt>Статус</dt><dd>{% include "_status.html" with status=order.status %}</dd></div>
+                {% if order.vehicle %}
+                <div class="kv-row"><dt>Автобус</dt><dd>{{ order.vehicle }}</dd></div>
+                <div class="kv-row"><dt>Ціна</dt><dd>{{ order.total_price }} грн</dd></div>
+                {% endif %}
+            </dl>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn{% if danger %} btn-danger{% endif %}">{{ button }}</button>
+                <a href="{% url 'orders' %}" class="btn btn-secondary">Ні, повернутися</a>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 {% endblock %}

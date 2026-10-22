@@ -6,8 +6,7 @@
     {% if map_data.stops %}
     <div class="map-canvas" id="busflow-map" data-map-data="busflow-map-data"></div>
     {% else %}
-    <div class="map-canvas map-empty"></div>
-    <p class="muted map-note">Показувати поки що нічого: зупинок немає.</p>
+    <div class="map-canvas map-empty"><span class="muted">Карта з'явиться, щойно буде додано зупинки.</span></div>
     {% endif %}
     {% if map_note %}<p class="muted map-note">{{ map_note }}</p>{% endif %}
     {% with path=map_data.paths.0 %}

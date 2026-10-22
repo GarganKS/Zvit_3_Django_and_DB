@@ -11,6 +11,7 @@ Django 6.1.2 report project ("BusFlow") on Python 3.14 with MySQL 8 (Docker). Pa
   - `routing.py` - real route geometry: asks the public OSRM demo server for the road path between the stops of a route and caches it in `RoutePath` (keyed by a hash of the stop coordinates, so a changed stop order invalidates the cache). Falls back to a straight line when the service is unavailable.
   - `signals.py` - hooks Trip/Order save/delete into `services.py` (this is what frees a vehicle when a trip is deleted).
   - `views.py`, `urls.py` - list/detail/create/edit/delete views, order actions, `RoleLoginView`.
+  - `management/commands/` - `update_statuses` (run periodically), `seed_demo`.
   - `admin.py` - `Manager` proxy section (group assigned automatically), `User` admin with client inline.
 - `templates/base.html`, `templates/_status.html`, `static/css/style.css` (spacing scale `--space-*`, `.cluster`, `.stack`, `.tile` dashboard cards), `static/js/route_form.js`, `static/js/trip_list.js` (клік по рядку списку рейсів відкриває деталі рейсу; `tr[data-trip-url]`).
 - Maps: Leaflet 1.9.4 is vendored in `static/vendor/leaflet/` (no CDN, no build step). Tiles come from OSM DE (`tile.openstreetmap.de`, OSM data, no API key and no request blocking), so the browser needs internet. The tile URL and the attribution live in the `TILES`/`ATTRIBUTION` constants of the three JS files - switch provider there (`tile.openstreetmap.org` blocks apps that do not identify themselves; Carto basemaps need an API key now).
@@ -58,6 +59,7 @@ python manage.py runserver
 python manage.py check          # always run after model changes
 python manage.py makemigrations && python manage.py migrate
 python manage.py test
+python manage.py update_statuses  # trip progress by time (cron)
 ```
 
 Time zone is `Europe/Kyiv`; on Windows install `tzdata` (`pip install tzdata`).
@@ -74,3 +76,10 @@ Time zone is `Europe/Kyiv`; on Windows install `tzdata` (`pip install tzdata`).
 ## Style
 
 Use `-` (hyphen) instead of `—` (em dash) in template text and page titles.
+
+## Дизайн-система (редизайн 2026)
+- Стилі: `static/css/style.css` (CSS-змінні, світла/темна тема через `data-theme` на `<html>`). Кольори не хардкодити, брати з `:root`.
+- Шрифт Onest (Google Fonts) та іконки Lucide підключаються з CDN у `templates/base.html`; іконки: `<i data-lucide="назва"></i>`. Для динамічно доданого HTML викликати `window.busflowIcons()`.
+- `static/js/app.js`: тема, мобільне меню, сортування (`th[data-sort="text|num"]`, значення для сортування в `data-sort-value`) і швидкий пошук (`input[data-table-filter="id-таблиці"]`) для `table.data-table`.
+- Таблиці списків мають клас `stack-table` і `data-label` у кожній комірці: на телефоні вони стають картками.
+- Статуси: `{% include "_status.html" with status=... %}`, кольори в `.badge-*`.
