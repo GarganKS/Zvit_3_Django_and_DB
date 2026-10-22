@@ -113,7 +113,7 @@
             });
         });
 
-        /* Швидкий пошук по вже завантажених рядках */
+        /* Пошук по вже завантажених рядках */
         var id = table.id;
         if (!id) return;
         var input = document.querySelector('[data-table-filter="' + id + '"]');

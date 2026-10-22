@@ -120,24 +120,114 @@
 </div></div>
 
 {% else %}
-<section class="hero">
+<section class="lp-hero">
     <div>
+        <p class="lp-kicker"><i data-lucide="bus-front"></i>Система керування автобусними перевезеннями</p>
         <h1>Автобусні рейси без зайвого клопоту</h1>
-        <p>Увійдіть, щоб переглядати рейси та замовляти автобус для групи, команди чи події.</p>
+        <p class="lp-lead">BusFlow з'єднує клієнта і перевізника: замовлення автобуса для групи чи події, планування маршрутів і рейсів, продаж квитків та контроль статусів - усе в одному вікні.</p>
         <div class="cluster">
-            <a href="{% url 'login' %}" class="btn"><i data-lucide="log-in"></i>Увійти</a>
-            <a href="{% url 'register' %}" class="btn btn-secondary">Зареєструватися</a>
+            <a href="{% url 'register' %}" class="btn btn-accent"><i data-lucide="user-plus"></i>Зареєструватися</a>
+            <a href="{% url 'login' %}" class="btn btn-secondary"><i data-lucide="log-in"></i>Увійти</a>
+        </div>
+        <ul class="lp-points">
+            <li><i data-lucide="circle-check"></i>Реальна траса маршруту на карті</li>
+            <li><i data-lucide="circle-check"></i>Статуси оновлюються автоматично</li>
+            <li><i data-lucide="circle-check"></i>Квитки за місткістю автобуса</li>
+        </ul>
+    </div>
+    <div class="lp-hero-art" aria-hidden="true">
+        <img
+            class="lp-hero-img"
+            src="https://images.unsplash.com/photo-1621422921200-d2130dd7a368?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+        />
+        <span class="art-chip art-chip-route">
+            <span class="art-chip-title">Львів - Київ</span>
+            <span class="badge badge-progress">В дорозі</span>
+        </span>
+        <span class="art-chip art-chip-ticket">
+            <i data-lucide="ticket"></i>
+            <span>Квиток продано - 450 грн</span>
+        </span>
+    </div>
+</section>
+
+<section class="lp-section">
+    <div class="lp-head">
+        <h2>Як це працює</h2>
+        <p>Чотири кроки від заявки до поїздки.</p>
+    </div>
+    <ol class="lp-steps">
+        <li class="lp-step">
+            <span class="lp-num">1</span>
+            <h3>Клієнт залишає заявку</h3>
+            <p>Обирає напрям, дату та кількість пасажирів - це займає кілька хвилин.</p>
+        </li>
+        <li class="lp-step">
+            <span class="lp-num">2</span>
+            <h3>Менеджер планує рейс</h3>
+            <p>Підбирає вільний автобус і повідомляє ціну поїздки.</p>
+        </li>
+        <li class="lp-step">
+            <span class="lp-num">3</span>
+            <h3>Клієнт підтверджує</h3>
+            <p>Погоджує умови або відмовляється - усе прозоро та під контролем.</p>
+        </li>
+        <li class="lp-step">
+            <span class="lp-num">4</span>
+            <h3>Автобус вирушає</h3>
+            <p>Статуси оновлюються самі, а квитки стають доступними до продажу.</p>
+        </li>
+    </ol>
+</section>
+
+<section class="lp-section">
+    <div class="lp-head">
+        <h2>Можливості системи</h2>
+        <p>Усе, що потрібно перевізнику та його клієнтам.</p>
+    </div>
+    <div class="lp-features">
+        <div class="lp-feature">
+            <span class="lp-feature-icon"><i data-lucide="map-pinned"></i></span>
+            <h3>Маршрути на карті</h3>
+            <p>Реальна траса по вулицях (OSRM) та зупинки з координатами - жодних умовних ліній.</p>
+        </div>
+        <div class="lp-feature">
+            <span class="lp-feature-icon"><i data-lucide="calendar-clock"></i></span>
+            <h3>Планування рейсів</h3>
+            <p>Реєстр автобусів, розклад та автоматична перевірка завантаженості транспорту.</p>
+        </div>
+        <div class="lp-feature">
+            <span class="lp-feature-icon"><i data-lucide="ticket"></i></span>
+            <h3>Квитки за місткістю</h3>
+            <p>Для кожного рейсу створюється стільки квитків, скільки місць в автобусі.</p>
+        </div>
+        <div class="lp-feature">
+            <span class="lp-feature-icon"><i data-lucide="clipboard-check"></i></span>
+            <h3>Замовлення з підтвердженням</h3>
+            <p>Прозорий цикл: заявка, пропозиція менеджера та згода клієнта.</p>
+        </div>
+        <div class="lp-feature">
+            <span class="lp-feature-icon"><i data-lucide="refresh-cw"></i></span>
+            <h3>Живі статуси</h3>
+            <p>Рейси самі переходять із «Заплановано» у «В дорозі» та «Завершено» за розкладом.</p>
+        </div>
+        <div class="lp-feature">
+            <span class="lp-feature-icon"><i data-lucide="users"></i></span>
+            <h3>Дві ролі й теми</h3>
+            <p>Кабінет клієнта й менеджера, світла та темна тема - на будь-який смак.</p>
         </div>
     </div>
-    <div class="hero-art">
-        <svg viewBox="0 0 420 240" fill="none" aria-hidden="true">
-            <path d="M24 200 C110 200 100 80 200 80 S320 180 372 110 S400 40 400 40" stroke="#fff" stroke-opacity=".12" stroke-width="16" stroke-linecap="round"/>
-            <path d="M24 200 C110 200 100 80 200 80 S320 180 372 110 S400 40 400 40" stroke="#2f6bff" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
-            <circle cx="24" cy="200" r="11" fill="#1f9d55" stroke="#fff" stroke-width="3"/>
-            <circle cx="200" cy="80" r="9" fill="#0e1e33" stroke="#fff" stroke-width="3"/>
-            <circle cx="372" cy="110" r="9" fill="#0e1e33" stroke="#fff" stroke-width="3"/>
-            <circle cx="400" cy="40" r="11" fill="#f5b301" stroke="#fff" stroke-width="3"/>
-        </svg>
+</section>
+
+<section class="lp-cta">
+    <div>
+        <h2>Готові почати?</h2>
+        <p>Створіть акаунт клієнта за хвилину та надішліть першу заявку на автобус.</p>
+    </div>
+    <div class="cluster">
+        <a href="{% url 'register' %}" class="btn btn-accent"><i data-lucide="user-plus"></i>Зареєструватися</a>
+        <a href="{% url 'login' %}" class="btn btn-secondary"><i data-lucide="log-in"></i>Увійти</a>
     </div>
 </section>
 {% endif %}
