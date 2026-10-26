@@ -13,8 +13,8 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "app_BusFlow",
+    "social_django",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
@@ -177,3 +179,32 @@ OSRM_TIMEOUT = 15
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("GOOGLE_OAUTH2_SECRET")
+
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "social_core.backends.google.GoogleOAuth2",
+)
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["email", "profile"]
+
+# Стандартний pipeline social-auth + крок, що робить користувача клієнтом.
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.pipeline.user.user_details",
+    "app_BusFlow.social_pipeline.assign_client_role",
+)
+
+# LOGIN_REDIRECT_URL = "/accounts/profile/"
+# SOCIAL_AUTH_LOGIN_REDIRECT_URL = LOGIN_REDIRECT_URL
+
+ALLOWED_HOSTS = ["busflow.gg", "localhost", "127.0.0.1"]

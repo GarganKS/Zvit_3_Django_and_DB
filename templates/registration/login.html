@@ -18,6 +18,7 @@
                 <div class="form-grid">{{ form.as_div }}</div>
                 <div class="form-actions"><button type="submit" class="btn btn-block"><i data-lucide="log-in"></i>Увійти</button></div>
             </form>
+            {% include "_google_button.html" %}
             <p class="form-note">Немає акаунта? <a href="{% url 'register' %}">Зареєструватися</a></p>
         </div>
     </div>

@@ -998,6 +998,11 @@ a.stat:hover { border-color: var(--primary); text-decoration: none; }
 .auth-top .nav-btn { color: var(--muted); }
 .auth-top .nav-btn:hover { background: var(--primary-soft); color: var(--primary); }
 .auth-mobile-brand { display: none; }
+.auth-divider { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-5) 0 var(--space-4); color: var(--muted); font-size: 0.875rem; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.btn-google { gap: 10px; }
+.btn-google svg { width: 18px; height: 18px; flex: none; }
+.btn-google:hover { color: var(--text); border-color: var(--line-strong); background: var(--surface-2); }
 @media (max-width: 860px) {
     .auth { grid-template-columns: 1fr; }
     .auth-aside { display: none; }
