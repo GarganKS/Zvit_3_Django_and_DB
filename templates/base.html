@@ -62,7 +62,7 @@
                     </span>
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
-                        <button type="submit" class="nav-btn" aria-label="Вийти" title="Вийти"><i data-lucide="log-out"></i></button>
+                        <button type="submit" id="logout-btn" class="nav-btn" aria-label="Вийти" title="Вийти"><i data-lucide="log-out"></i></button>
                     </form>
                     {% else %}
                     <a href="{% url 'login' %}" class="nav-text-link">Увійти</a>

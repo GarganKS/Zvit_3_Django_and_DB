@@ -479,11 +479,16 @@ class StopDetailView(ManagerRequiredMixin, DetailView):
         return context
 
 
-class StopCreateView(ManagerRequiredMixin, TitleMixin, CreateView):
-    form_class = StopForm
-    title = "Додати зупинку"
+class StopCreateView(CreateView):
+    model = Stop
+    fields = ["name", "address", "latitude", "longitude"]
     template_name = "app_BusFlow/stop_form.html"
     success_url = reverse_lazy("stops")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Зупинку успішно створено!")
+        return response
 
 
 class StopUpdateView(ManagerRequiredMixin, TitleMixin, UpdateView):

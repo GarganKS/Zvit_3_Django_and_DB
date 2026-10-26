@@ -35,7 +35,7 @@
             <td class="actions">
                 <div class="cluster">
                     <a href="{% url 'stop_edit' stop.pk %}" class="icon-btn" title="Редагувати" aria-label="Редагувати"><i data-lucide="pencil"></i></a>
-                    <a href="{% url 'stop_delete' stop.pk %}" class="icon-btn danger" title="Видалити" aria-label="Видалити"><i data-lucide="trash-2"></i></a>
+                    <a href="{% url 'stop_delete' stop.pk %}" class="icon-btn danger" id="delete_{{ stop.name }}" title="Видалити" aria-label="Видалити"><i data-lucide="trash-2"></i></a>
                 </div>
             </td>
         </tr>
