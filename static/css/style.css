@@ -989,7 +989,7 @@ a.stat:hover { border-color: var(--primary); text-decoration: none; }
 .auth-aside .brand { margin: 0; }
 .auth-aside h2 { font-size: 2rem; line-height: 1.15; font-weight: 650; max-width: 18ch; color: #fff; letter-spacing: -0.02em; }
 .auth-aside p { margin: 14px 0 0; color: var(--on-ink-muted); max-width: 40ch; }
-.auth-route { position: absolute; right: -40px; bottom: 20px; width: 420px; max-width: 90%; opacity: 0.9; pointer-events: none; }
+.auth-route { position: absolute; right: -40px; bottom: 300px; width: 700px; max-width: 90%; opacity: 0.9; pointer-events: none; }
 .auth-main { display: grid; place-items: center; padding: 32px 20px; position: relative; }
 .auth-card { width: 100%; max-width: 420px; }
 .auth-card h1 { font-size: 1.6rem; margin-bottom: 6px; }
